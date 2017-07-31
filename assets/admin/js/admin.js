@@ -42,66 +42,65 @@ jQuery(document).ready(function($) {
 				}
 			};
 		}
+		
+	jQuery( ':input.woo-orders-search-by-product' ).each( function() {
+		var select2_args = {
+			allowClear:  jQuery( this ).data( 'allow_clear' ) ? true : false,
+			placeholder: jQuery( this ).data( 'placeholder' ),
+			minimumInputLength: jQuery( this ).data( 'minimum_input_length' ) ? jQuery( this ).data( 'minimum_input_length' ) : '3',
+			escapeMarkup: function( m ) {
+			return m;
+			},
+			ajax: {
+			url:         wc_products_select_params.ajax_url,
+			dataType:    'json',
+			delay:       250,
+			data:        function( params ) {
+			return {
+			term:     params.term,
+			action:   jQuery( this ).data( 'action' ) || 'search_woo_products',
+			security: wc_products_select_params.search_woo_products_nonce,
+			exclude:  jQuery( this ).data( 'exclude' ),
+			include:  jQuery( this ).data( 'include' ),
+			limit:    jQuery( this ).data( 'limit' )
+			};
+			},
+			processResults: function( data ) {
+			var terms = [];
+			if ( data ) {
+			$.each( data, function( id, text ) {
+			terms.push( { id: id, text: text } );
+			});
+			}
+			return {
+			results: terms
+			};
+			},
+			cache: true
+			}
+		};
 
-// Ajax product search box
-$( ':input.woo-orders-search-by-product' ).filter( ':not(.enhanced)' ).each( function() {
-var select2_args = {
-allowClear:  $( this ).data( 'allow_clear' ) ? true : false,
-placeholder: $( this ).data( 'placeholder' ),
-minimumInputLength: $( this ).data( 'minimum_input_length' ) ? $( this ).data( 'minimum_input_length' ) : '3',
-escapeMarkup: function( m ) {
-return m;
-},
-ajax: {
-url:         wc_products_select_params.ajax_url,
-dataType:    'json',
-delay:       250,
-data:        function( params ) {
-return {
-term:     params.term,
-action:   $( this ).data( 'action' ) || 'woocommerce_json_search_products_and_variations',
-security: wc_products_select_params.search_products_nonce,
-exclude:  $( this ).data( 'exclude' ),
-include:  $( this ).data( 'include' ),
-limit:    $( this ).data( 'limit' )
-};
-},
-processResults: function( data ) {
-var terms = [];
-if ( data ) {
-$.each( data, function( id, text ) {
-terms.push( { id: id, text: text } );
-});
-}
-return {
-results: terms
-};
-},
-cache: true
-}
-};
+		select2_args = $.extend( select2_args, getProductsSelectFormatString() );
 
-select2_args = $.extend( select2_args, getProductsSelectFormatString() );
+		jQuery( this ).select2( select2_args ).addClass( 'enhanced' );
 
-$( this ).select2( select2_args ).addClass( 'enhanced' );
+		if ( jQuery( this ).data( 'sortable' ) ) {
+			var $select = jQuery(this);
+			var $list   = jQuery( this ).next( '.select2-container' ).find( 'ul.select2-selection__rendered' );
 
-if ( $( this ).data( 'sortable' ) ) {
-var $select = $(this);
-var $list   = $( this ).next( '.select2-container' ).find( 'ul.select2-selection__rendered' );
-
-$list.sortable({
-placeholder : 'ui-state-highlight select2-selection__choice',
-forcePlaceholderSize: true,
-items       : 'li:not(.select2-search__field)',
-tolerance   : 'pointer',
-stop: function() {
-$( $list.find( '.select2-selection__choice' ).get().reverse() ).each( function() {
-var id     = $( this ).data( 'data' ).id;
-var option = $select.find( 'option[value="' + id + '"]' )[0];
-$select.prepend( option );
-} );
-}
-});
-}
-});
+			$list.sortable({
+			placeholder : 'ui-state-highlight select2-selection__choice',
+			forcePlaceholderSize: true,
+			items       : 'li:not(.select2-search__field)',
+			tolerance   : 'pointer',
+			stop: function() {
+			jQuery( $list.find( '.select2-selection__choice' ).get().reverse() ).each( function() {
+			var id     = jQuery( this ).data( 'data' ).id;
+			var option = $select.find( 'option[value="' + id + '"]' )[0];
+			$select.prepend( option );
+			} );
+			}
+			});
+		}
+	});
 });

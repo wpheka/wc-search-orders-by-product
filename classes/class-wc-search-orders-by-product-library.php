@@ -26,7 +26,7 @@ class WC_Search_Orders_By_Product_Library {
 	 */
 	public function load_select2_lib() {
 	  global $WC_Search_Orders_By_Product;
-	  wp_enqueue_script('select2', $this->jquery_lib_url . 'select2/js/select2.full.min.js', array('jquery'), $WC_Search_Orders_By_Product->version, true);
+	  wp_enqueue_script('select2_js', $this->jquery_lib_url . 'select2/js/select2.full.min.js', array('jquery'), $WC_Search_Orders_By_Product->version, true);
 		wp_enqueue_style('select2_css',  $this->jquery_lib_url . 'select2/css/select2.min.css', array(), $WC_Search_Orders_By_Product->version);
 	}
 }

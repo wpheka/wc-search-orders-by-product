@@ -18,12 +18,8 @@ class WC_Search_Orders_By_Product_Admin {
 		$screen_id    = $screen ? $screen->id : '';
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
-		if (wp_script_is( 'select2', 'enqueued' )) {
-			// do nothing
-		} else {
-			$WC_Search_Orders_By_Product->library->load_select2_lib();
-		}
-		wp_register_script('search_orders_by_product_admin_js', $WC_Search_Orders_By_Product->plugin_url.'assets/admin/js/admin.js', array('jquery', 'select2'), $WC_Search_Orders_By_Product->version, true);
+		$WC_Search_Orders_By_Product->library->load_select2_lib();
+		wp_register_script('search_orders_by_product_admin_js', $WC_Search_Orders_By_Product->plugin_url.'assets/admin/js/admin.js', array('jquery', 'select2_js'), $WC_Search_Orders_By_Product->version, true);
 		wp_localize_script( 'search_orders_by_product_admin_js', 'wc_products_select_params', array(
 			'i18n_no_matches'           => _x( 'No matches found', 'products select', $WC_Search_Orders_By_Product->text_domain ),
 			'i18n_ajax_error'           => _x( 'Loading failed', 'products select', $WC_Search_Orders_By_Product->text_domain ),
@@ -36,7 +32,7 @@ class WC_Search_Orders_By_Product_Admin {
 			'i18n_load_more'            => _x( 'Loading more results&hellip;', 'products select', $WC_Search_Orders_By_Product->text_domain ),
 			'i18n_searching'            => _x( 'Searching&hellip;', 'products select', $WC_Search_Orders_By_Product->text_domain ),
 			'ajax_url'                  => admin_url( 'admin-ajax.php' ),
-			'search_products_nonce'     => wp_create_nonce( 'search-products' ),
+			'search_woo_products_nonce'     => wp_create_nonce( 'search-woo-products' ),
 		) );
 
 		if ( in_array( $screen_id, wc_get_screen_ids() ) ) {
@@ -55,6 +51,7 @@ class WC_Search_Orders_By_Product_Admin {
 	}
 
 	public function display_products_search_dropdown() {
+		global $WC_Search_Orders_By_Product;
 		$product_name = '';
 		$product_id = '';
 		if ( ! empty( $_GET['product_id'] ) ) {
@@ -65,7 +62,7 @@ class WC_Search_Orders_By_Product_Admin {
 			}
 		}
 		?>
-		<select class="woo-orders-search-by-product" style="width:203px;" id="product_id" name="product_id" data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'woocommerce' ); ?>" data-action="woocommerce_json_search_products_and_variations">
+		<select class="woo-orders-search-by-product" style="width:203px;" id="product_id" name="product_id" data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', $WC_Search_Orders_By_Product->text_domain ); ?>" data-action="search_woo_products">
 		<option value="<?php echo esc_attr( $product_id ); ?>" selected="selected"><?php echo htmlspecialchars( $product_name ); ?><option>
 		</select>
 		<?php
