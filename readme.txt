@@ -10,7 +10,7 @@ License URI: https://www.gnu.org/licenses/gpl-3.0.html
 A simple plugin that helps you search your WooCommerce orders by product.
 
 == Description ==
-This WooCommerce extension automatically adds dropdown in WooCommerce Orders screen.
+WC Search Orders By Product does exactly what it says - This WooCommerce extension automatically adds product search and product type filter dropdown in WooCommerce Orders screen.
 
 
 == Installation ==
