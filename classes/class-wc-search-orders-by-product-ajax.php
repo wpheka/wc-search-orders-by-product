@@ -6,7 +6,7 @@ class WC_Search_Orders_By_Product_Ajax {
 		add_action( 'wp_ajax_nopriv_search_woo_products', array(&$this,'search_woo_products'));
 	}
 
-	public function search_woo_products( $term = '', $include_variations = true ) {
+	public function search_woo_products( $term = '', $include_variations = false ) {
 		check_ajax_referer( 'search-woo-products', 'security' );
 
 		$term = wc_clean( empty( $term ) ? stripslashes( $_GET['term'] ) : $term );

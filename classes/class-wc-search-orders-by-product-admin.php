@@ -66,6 +66,63 @@ class WC_Search_Orders_By_Product_Admin {
 		<option value="<?php echo esc_attr( $product_id ); ?>" selected="selected"><?php echo htmlspecialchars( $product_name ); ?><option>
 		</select>
 		<?php
+		// Product type filtering
+		$terms   = get_terms( 'product_type' );
+		$output  = '<select name="search_product_type" id="dropdown_product_type">';
+		$output .= '<option value="">' . __( 'Show all product types', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
+		if(!empty($terms)) {
+					foreach ( $terms as $term ) {
+				$output .= '<option value="' . sanitize_title( $term->name ) . '" ';
+
+				if ( isset( $_GET['search_product_type'] ) ) {
+					$output .= selected( $term->slug, $_GET['search_product_type'], false );
+				}
+
+				$output .= '>';
+
+				switch ( $term->name ) {
+					case 'grouped' :
+						$output .= __( 'Grouped product', $WC_Search_Orders_By_Product->text_domain );
+						break;
+					case 'external' :
+						$output .= __( 'External/Affiliate product', $WC_Search_Orders_By_Product->text_domain );
+						break;
+					case 'variable' :
+						$output .= __( 'Variable product', $WC_Search_Orders_By_Product->text_domain );
+						break;
+					case 'simple' :
+						$output .= __( 'Simple product', $WC_Search_Orders_By_Product->text_domain );
+						break;
+					default :
+						// Assuming that we have other types in future
+						$output .= ucfirst( $term->name );
+						break;
+				}
+
+				$output .= '</option>';
+
+				if ( 'simple' == $term->name ) {
+
+					$output .= '<option value="downloadable" ';
+
+					if ( isset( $_GET['search_product_type'] ) ) {
+						$output .= selected( 'downloadable', $_GET['search_product_type'], false );
+					}
+
+					$output .= '> ' . ( is_rtl() ? '&larr;' : '&rarr;' ) . ' ' . __( 'Downloadable', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
+
+					$output .= '<option value="virtual" ';
+
+					if ( isset( $_GET['search_product_type'] ) ) {
+						$output .= selected( 'virtual', $_GET['search_product_type'], false );
+					}
+
+					$output .= '> ' . ( is_rtl() ? '&larr;' : '&rarr;' ) . ' ' . __( 'Virtual', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
+				}
+			}
+		}
+
+		echo $output .= '</select>';
 	}
 
 	public function filter_orders_request_by_product($vars) {
@@ -80,10 +137,18 @@ class WC_Search_Orders_By_Product_Admin {
 			AND order_item_type = 'line_item'
 			", $_GET['product_id'] ) );
 
-			// Force WP_Query return empty if don't found any order.
-			$order_ids = ! empty( $order_ids ) ? $order_ids : array( 0 );
+			$order_ids = ! empty( $order_ids ) ? $order_ids : array( 0 );			
 
-			$vars['post__in'] = $order_ids;
+			if (!empty($_GET['search_product_type'])) {
+				if (WC_Product_Factory::get_product_type($_GET['product_id'])==$_GET['search_product_type']) {
+					$vars['post__in'] = $order_ids;
+				}else{
+					$vars['post__in'] = array( 0 );
+				}
+			}else{
+				$vars['post__in'] = $order_ids;
+			}
+
 			}
 		}
 		return $vars;
