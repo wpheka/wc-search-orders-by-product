@@ -69,7 +69,7 @@ class WC_Search_Orders_By_Product_Admin {
 		// Product type filtering
 		$terms   = get_terms( 'product_type' );
 		$output  = '<select name="search_product_type" id="dropdown_product_type">';
-		$output .= '<option value="">' . __( 'Show all product types', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
+		$output .= '<option value="">' . __( 'Search by product types', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
 		if(!empty($terms)) {
 					foreach ( $terms as $term ) {
 				$output .= '<option value="' . sanitize_title( $term->name ) . '" ';
@@ -150,6 +150,52 @@ class WC_Search_Orders_By_Product_Admin {
 			}
 
 			}
+		if (!empty($_GET['search_product_type']) && empty($_GET['product_id'])) {
+			// get all product ids in orders
+			$product_ids = $wpdb->get_col( $wpdb->prepare( "
+			SELECT meta_value
+			FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = %s
+			", '_product_id' ) );
+			
+			if(!empty($product_ids)) {
+				$product_ids = array_unique($product_ids);
+				$product_ids_filter_type = array();				
+				foreach ($product_ids as $product_id) {
+					if (WC_Product_Factory::get_product_type($product_id)==$_GET['search_product_type']) {
+						$product_ids_filter_type[] = $product_id;
+					}					
+				}
+
+				if(!empty($product_ids_filter_type)) {
+					$orders_ids_arr = array();
+					foreach ($product_ids_filter_type as $prod_id) {
+						$order_ids_data = $wpdb->get_col( $wpdb->prepare( "
+						SELECT order_id
+						FROM {$wpdb->prefix}woocommerce_order_items
+						WHERE order_item_id IN ( SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d )
+						AND order_item_type = 'line_item'
+						", $prod_id ) );
+						if(!empty($order_ids_data)) {
+							$orders_ids_arr[] = array_unique($order_ids_data);
+						}
+					}
+					if(!empty($orders_ids_arr)) {
+						$final_order_ids = array();
+						foreach ($orders_ids_arr as $ord_arr) {
+							foreach ($ord_arr as $ord_id) {
+								$final_order_ids[] = $ord_id;
+							}
+						}
+						if(!empty($final_order_ids)) {
+							$final_order_ids = array_unique($final_order_ids);
+							$vars['post__in'] = $final_order_ids;
+						}
+					}
+				}else{
+					$vars['post__in'] = array( 0 );
+				}
+			}
+		}
 		}
 		return $vars;
 	}

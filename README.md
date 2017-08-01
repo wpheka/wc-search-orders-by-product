@@ -1,2 +1,2 @@
 # WC-Search-Orders-By-Product
-Search woocommerce orders by product name and type.
+Search woocommerce orders by product name.
