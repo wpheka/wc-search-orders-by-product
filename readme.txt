@@ -21,6 +21,10 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 
 == Installation ==
 
-1. Upload 'wc-Search-orders-by-product' to the '/wp-content/plugins/' directory
+= Minimum Requirements =
+
+* WooCommerce 3.0 or later
+
+1. Upload 'wc-Search-orders-by-product' to the '/wp-content/plugins/' directory or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Done!
