@@ -1,7 +1,7 @@
 === WC Search Orders By Product ===
 Contributors: akshayaswaroop
 Tags: woocommerce, search, filter, order, product, search orders, admin
-Requires at least: 4.0
+Requires at least: 4.4
 Tested up to: 4.8
 Stable tag: 1.0.0
 License: GPLv3
