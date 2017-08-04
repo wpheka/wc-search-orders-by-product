@@ -37,7 +37,6 @@ class WC_Search_Orders_By_Product_Admin {
 
 		if ( in_array( $screen_id, wc_get_screen_ids() ) ) {
 			wp_enqueue_script( 'search_orders_by_product_admin_js' );
-			wp_enqueue_style('search_orders_by_product_admin_css',  $WC_Search_Orders_By_Product->plugin_url.'assets/admin/css/admin.css', array('select2_css'), $WC_Search_Orders_By_Product->version);
 		}
 
 	}
