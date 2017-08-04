@@ -38,8 +38,6 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 = How It Works? =
 *check installation*
 
-== Screenshots ==
-1. Order Filters
 
 == Changelog ==
 
