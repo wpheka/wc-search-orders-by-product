@@ -17,6 +17,9 @@ WC Search Orders By Product does exactly what it says - This WooCommerce extensi
 * By product **name**
 * By product **type**
 
+For improving the user experience and performance, This plugin uses the functionality of AJAX-powered [Select2](https://github.com/select2/select2) select boxes.
+Select2 is licensed under MIT and Copyright (c) 2012-2015 Kevin Brown, Igor Vaynberg, and Select2 contributors.
+
 If you enjoyed this plugin then please put a review, that will encourage me to bring some more …
 
 == Installation ==
@@ -27,4 +30,18 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 
 1. Upload 'wc-Search-orders-by-product' to the '/wp-content/plugins/' directory or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Done!
+3. Go to Admin area -> WooCommerce -> Orders
+4. Done!
+
+== Frequently Asked Questions ==
+
+= How It Works? =
+*check installation*
+
+== Screenshots ==
+1. Order Filters
+
+== Changelog ==
+
+= 1.0.0 =
+* Initial release
