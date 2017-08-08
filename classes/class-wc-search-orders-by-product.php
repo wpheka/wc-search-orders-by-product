@@ -28,30 +28,36 @@ class WC_Search_Orders_By_Product {
 		$this->text_domain = WC_SEARCH_ORDERS_BY_PRODUCT_TEXT_DOMAIN;
 		$this->version = WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_VERSION;
 		
-		add_action('init', array(&$this, 'init'), 0);
+		add_action('init', array(&$this, 'sobp_init'), 0);
 	}
 	
 	/**
 	 * initilize plugin on WP init
 	 */
-	function init() {
+	function sobp_init() {
 		
 		// Init Text Domain
-		$this->load_plugin_textdomain();
+		$this->sobp_load_plugin_textdomain();
 		
 		// Init library
-		$this->load_class('library');
-		$this->library = new WC_Search_Orders_By_Product_Library();
+		if ( ! class_exists( 'WC_Search_Orders_By_Product_Library' ) ) {
+			$this->sobp_load_class('library');
+			$this->library = new WC_Search_Orders_By_Product_Library();
+		}		
 
 		// Init ajax
 		if(defined('DOING_AJAX')) {
-      		$this->load_class('ajax');
-      		$this->ajax = new  WC_Search_Orders_By_Product_Ajax();
+			if ( ! class_exists( 'WC_Search_Orders_By_Product_Ajax' ) ) {
+				$this->sobp_load_class('ajax');
+      			$this->ajax = new  WC_Search_Orders_By_Product_Ajax();
+			}      		
     	}
 
 		if (is_admin()) {
-			$this->load_class('admin');
-			$this->admin = new WC_Search_Orders_By_Product_Admin();
+			if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin' ) ) {
+				$this->sobp_load_class('admin');
+				$this->admin = new WC_Search_Orders_By_Product_Admin();
+			}			
 		}
 	}
 	
@@ -63,18 +69,18 @@ class WC_Search_Orders_By_Product {
    * @access public
    * @return void
    */
-  public function load_plugin_textdomain() {
+  public function sobp_load_plugin_textdomain() {
     $locale = apply_filters( 'plugin_locale', get_locale(), $this->token );
 
     load_textdomain( $this->text_domain, WP_LANG_DIR . "/wc-search-orders-by-product/wc-search-orders-by-product-$locale.mo" );
     load_textdomain( $this->text_domain, $this->plugin_path . "/languages/wc-search-orders-by-product-$locale.mo" );
   }
 
-	public function load_class($class_name = '') {
+	public function sobp_load_class($class_name = '') {
 		if ('' != $class_name && '' != $this->token) {
 			require_once ('class-' . esc_attr($this->token) . '-' . esc_attr($class_name) . '.php');
 		} // End If Statement
-	}// End load_class()
+	}// End sobp_load_class()
 	
 	/** Cache Helpers *********************************************************/
 
@@ -84,7 +90,7 @@ class WC_Search_Orders_By_Product {
 	 * @access public
 	 * @return void
 	 */
-	function nocache() {
+	function sobp_nocache() {
 		if (!defined('DONOTCACHEPAGE'))
 			define("DONOTCACHEPAGE", "true");
 		// WP Super Cache constant

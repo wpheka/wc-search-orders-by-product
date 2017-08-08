@@ -1,137 +1,137 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Demo Plugin\n"
-"POT-Creation-Date: 2014-01-15 17:40+0530\n"
-"PO-Revision-Date: 2014-01-15 17:41+0530\n"
-"Last-Translator: Techbridge <admin@techbridge.co.in>\n"
-"Language-Team: Techbridge <admin@techbridge.co.in>\n"
+"Project-Id-Version: WC Search Orders By Product\n"
+"POT-Creation-Date: 2017-08-05 01:27+0530\n"
+"PO-Revision-Date: 2017-08-05 01:28+0530\n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "Language: en_US\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.7\n"
-"X-Poedit-KeywordsList: _;gettext;gettext_noop;__;_e\n"
-"X-Poedit-Basepath: .\n"
-"X-Poedit-SearchPath-0: C:\\wamp\\www\\3dcart\\wp-content\\plugins"
-"\\dc_demo_plugin\n"
+"X-Generator: Poedit 2.0.1\n"
+"X-Poedit-Basepath: ..\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: wc_search_orders_by_product.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
+"_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:28
-msgid "Demo Default Settings"
+#: classes/class-wc-search-orders-by-product-admin.php:24
+msgctxt "products select"
+msgid "No matches found"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:30
-msgid "ID Number"
-msgstr "Identification"
-
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:30
-msgid "Enter your ID Number here."
+#: classes/class-wc-search-orders-by-product-admin.php:25
+msgctxt "products select"
+msgid "Loading failed"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:30
-msgid "It will represent your identification."
+#: classes/class-wc-search-orders-by-product-admin.php:26
+msgctxt "products select"
+msgid "Please enter 1 or more characters"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:31
-msgid "About"
+#: classes/class-wc-search-orders-by-product-admin.php:27
+msgctxt "products select"
+msgid "Please enter %qty% or more characters"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:31
-msgid "About you"
+#: classes/class-wc-search-orders-by-product-admin.php:28
+msgctxt "products select"
+msgid "Please delete 1 character"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:31
-msgid "It will represent your significant."
+#: classes/class-wc-search-orders-by-product-admin.php:29
+msgctxt "products select"
+msgid "Please delete %qty% characters"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:32
-msgid "Enable"
+#: classes/class-wc-search-orders-by-product-admin.php:30
+msgctxt "products select"
+msgid "You can only select 1 item"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:33
-msgid "Off Day"
+#: classes/class-wc-search-orders-by-product-admin.php:31
+msgctxt "products select"
+msgid "You can only select %qty% items"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:33
-msgid "Choose your preferred week offday."
+#: classes/class-wc-search-orders-by-product-admin.php:32
+msgctxt "products select"
+msgid "Loading more results&hellip;"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:33
-msgid "By default Saterday will be offday."
+#: classes/class-wc-search-orders-by-product-admin.php:33
+msgctxt "products select"
+msgid "Searching&hellip;"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:34
-msgid "Preference"
+#: classes/class-wc-search-orders-by-product-admin.php:64
+msgid "Search for a product&hellip;"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:34
-msgid "Choose your preferred occurence count."
+#: classes/class-wc-search-orders-by-product-admin.php:71
+msgid "Search by product types"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:35
-msgid "Logo"
+#: classes/class-wc-search-orders-by-product-admin.php:84
+msgid "Grouped product"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:35
-msgid "Your presentation."
+#: classes/class-wc-search-orders-by-product-admin.php:87
+msgid "External/Affiliate product"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:35
-msgid "Represent your graphical signature."
+#: classes/class-wc-search-orders-by-product-admin.php:90
+msgid "Variable product"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:36
-msgid "Choose Color"
+#: classes/class-wc-search-orders-by-product-admin.php:93
+msgid "Simple product"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:36
-msgid "Choose your color here."
+#: classes/class-wc-search-orders-by-product-admin.php:111
+msgid "Downloadable"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:36
-msgid "This lets you choose your desired color."
+#: classes/class-wc-search-orders-by-product-admin.php:119
+msgid "Virtual"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:40
-msgid "Location"
+#: includes/wc-search-orders-by-product-core-functions.php:17
+msgid ""
+"Another orders search by product plugin is already installed, Please "
+"deactivate it first to install this plugin."
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:41
-msgid "Role"
+#: wc_search_orders_by_product.php:38
+msgid ""
+"WC Search Orders By Product plugin requires <a href=\"http://wordpress.org/"
+"extend/plugins/woocommerce/\">WooCommerce</a> plugins to be active!"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:70
-msgid "Item ID should be an intiger."
+#. Plugin Name of the plugin/theme
+msgid "WC Search Orders By Product"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:91
-msgid "Please upload your unique logo."
+#. Plugin URI of the plugin/theme
+msgid "https://github.com/AkshayaDev/WC-Search-Orders-By-Product"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:113
-msgid "General settings updated"
+#. Description of the plugin/theme
+msgid ""
+"A simple plugin that helps you search your WooCommerce orders by product."
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:126
-msgid "Enter your default settings below"
+#. Author of the plugin/theme
+msgid "Akshaya Swaroop"
 msgstr ""
 
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings-general.php:134
-msgid "Enter your custom settings below"
-msgstr ""
-
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings.php:27
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings.php:28
-msgid "DC Demo Settings"
-msgstr ""
-
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/admin/class-dc-demo-plugin-settings.php:41
-msgid "General"
-msgstr ""
-
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/classes/class-dc-demo-plugin-admin.php:29
-msgid "Powered by"
-msgstr ""
-
-#: C:\wamp\www\3dcart\wp-content\plugins\dc_demo_plugin/classes/class-dc-demo-plugin-admin.php:29
-msgid "Techbridge"
+#. Author URI of the plugin/theme
+msgid "https://github.com/AkshayaDev"
 msgstr ""

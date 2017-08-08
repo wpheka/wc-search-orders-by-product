@@ -1,13 +1,12 @@
 <?php
-if (!function_exists('check_another_search_order_plugin_exists')) {
-
-    /**
-     * On activation, check another search orders by product plugin exists.
-     *
-     * @access public
-     * @return void
-     */
-    function check_another_search_order_plugin_exists() {
+/**
+* On activation, check another search orders by product plugin exists.
+*
+* @access public
+* @return void
+*/
+if (!function_exists('sobp_check_another_search_order_plugin')) {
+    function sobp_check_another_search_order_plugin() {
         require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
         $search_order_plugins_arr = array();
         $search_order_plugins_arr[] = 'woocommerce-filter-orders-by-product/woocommerce-filter-orders-by-product.php';

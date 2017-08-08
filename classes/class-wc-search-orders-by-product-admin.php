@@ -3,22 +3,22 @@ class WC_Search_Orders_By_Product_Admin {
 
 	public function __construct() {
 		//admin script and style
-		add_action('admin_enqueue_scripts', array(&$this, 'enqueue_admin_script'));
-		add_action( 'restrict_manage_posts', array(&$this,'display_products_search_dropdown_restrict'));
-		add_filter( 'request', array(&$this,'filter_orders_request_by_product'));
+		add_action('admin_enqueue_scripts', array(&$this, 'sobp_enqueue_admin_script'));
+		add_action( 'restrict_manage_posts', array(&$this,'sobp_display_products_search_dropdown_restrict'));
+		add_filter( 'request', array(&$this,'sobp_filter_orders_request_by_product'));
 	}
 
 	/**
 	 * Admin Scripts
 	 */
 
-	public function enqueue_admin_script() {
+	public function sobp_enqueue_admin_script() {
 		global $WC_Search_Orders_By_Product;
 		$screen       = get_current_screen();
 		$screen_id    = $screen ? $screen->id : '';
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
-		$WC_Search_Orders_By_Product->library->load_select2_lib();
+		$WC_Search_Orders_By_Product->library->sobp_load_select2_lib();
 		wp_register_script('search_orders_by_product_admin_js', $WC_Search_Orders_By_Product->plugin_url.'assets/admin/js/admin.js', array('jquery', 'select2_js'), $WC_Search_Orders_By_Product->version, true);
 		wp_localize_script( 'search_orders_by_product_admin_js', 'wc_products_select_params', array(
 			'i18n_no_matches'           => _x( 'No matches found', 'products select', $WC_Search_Orders_By_Product->text_domain ),
@@ -41,7 +41,7 @@ class WC_Search_Orders_By_Product_Admin {
 
 	}
 
-	public function display_products_search_dropdown_restrict() {
+	public function sobp_display_products_search_dropdown_restrict() {
 		global $typenow;
 
 		if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ) ) ) {
@@ -124,7 +124,7 @@ class WC_Search_Orders_By_Product_Admin {
 		echo $output .= '</select>';
 	}
 
-	public function filter_orders_request_by_product($vars) {
+	public function sobp_filter_orders_request_by_product($vars) {
 		global $typenow, $wp_query, $wpdb, $wp_post_statuses;
 		if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ) ) ) {
 		// Search orders by product.
