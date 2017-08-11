@@ -4,7 +4,7 @@ Plugin Name: WC Search Orders By Product
 Plugin URI: https://github.com/AkshayaDev/WC-Search-Orders-By-Product
 Description: A simple plugin that helps you search your WooCommerce orders by product.
 Author: Akshaya Swaroop
-Version: 1.0.0
+Version: 1.0
 Author URI: https://github.com/AkshayaDev
 Requires at least: 4.4
 Tested up to: 4.8
@@ -17,18 +17,12 @@ if ( ! class_exists( 'WC_Dependencies_Search_Order', false ) ) {
     require_once( dirname( __FILE__ ) . '/includes/class-wc-search-orders-by-product-dependencies.php');
 }
 
-require_once(dirname(__FILE__).'/includes/wc-search-orders-by-product-core-functions.php');
-require_once(dirname(__FILE__)).'/config.php');
+require_once(dirname(__FILE__).'/config.php');
 if(!defined('WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_TOKEN')) exit;
 if(!defined('WC_SEARCH_ORDERS_BY_PRODUCT_TEXT_DOMAIN')) exit;
 
-/* Check if another search orders by product plugin exist */
-register_activation_hook(__FILE__, 'sobp_check_another_search_order_plugin');
-/* Remove rewrite rules on activation. */
-register_activation_hook(__FILE__, 'flush_rewrite_rules');
-
 if(!class_exists('WC_Search_Orders_By_Product') && WC_Dependencies_Search_Order::is_woocommerce_active()) {
-	require_once( trailingslashit(dirname(__FILE__)).'classes/class-wc-search-orders-by-product.php' );
+	require_once(dirname(__FILE__).'/classes/class-wc-search-orders-by-product.php');
 	global $WC_Search_Orders_By_Product;
 	$WC_Search_Orders_By_Product = new WC_Search_Orders_By_Product( __FILE__ );
 	$GLOBALS['WC_Search_Orders_By_Product'] = $WC_Search_Orders_By_Product;

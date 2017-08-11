@@ -26,5 +26,14 @@ class WC_Dependencies_Search_Order {
     public static function is_woocommerce_active() {
         return self::woocommerce_active_check();
     }
+    /**
+     * Check another order search plugin exists
+     * @return Boolean
+     */
+    public static function is_another_order_search_plugin_active() {
+        if (!self::$active_plugins)
+            self::init();
+        return in_array('woocommerce-filter-orders-by-product/woocommerce-filter-orders-by-product.php', self::$active_plugins) || array_key_exists('woocommerce-filter-orders-by-product/woocommerce-filter-orders-by-product.php', self::$active_plugins);
+    }
 }
 

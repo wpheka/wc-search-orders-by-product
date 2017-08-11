@@ -3,9 +3,10 @@ Contributors: akshayaswaroop
 Tags: woocommerce, search, filter, order, product, search orders, admin
 Requires at least: 4.4
 Tested up to: 4.8
-Stable tag: 1.0.0
+Stable tag: 1.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Donate link: http://donatenow.wc.lt/?donate=akshaya.swaroop3291@gmail.com&method=PayPal
 
 A simple plugin that helps you search your WooCommerce orders by product.
 
@@ -38,8 +39,16 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 = How It Works? =
 *check installation*
 
+== Screenshots ==
+
+1. WooCommerce Orders admin.
 
 == Changelog ==
 
-= 1.0.0 =
+= 1.0 =
+* Initial release
+
+== Upgrade Notice ==
+
+= 1.0 =
 * Initial release
