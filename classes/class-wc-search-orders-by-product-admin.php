@@ -220,6 +220,7 @@ class WC_Search_Orders_By_Product_Admin {
         <div class="wrap">
             <h1>WC Search Orders By Product Settings</h1>
             <?php settings_errors(); ?>
+            <div class="card">
             <form action="options.php" method="post">
                 <?php settings_fields('sobp_search_options'); ?>
                 <?php $options = get_option('sobp_settings'); ?>
@@ -243,6 +244,7 @@ class WC_Search_Orders_By_Product_Admin {
                 </table>
                 <?php submit_button(); ?>
             </form>
+            </div>
         </div>
 	<?php }
 	
