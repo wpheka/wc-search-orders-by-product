@@ -29,6 +29,7 @@ class WC_Search_Orders_By_Product {
 		$this->version = WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_VERSION;
 		
 		add_action('init', array(&$this, 'sobp_init'), 0);
+		add_filter( 'plugin_action_links_' . plugin_basename($file), array($this, 'sobp_action_links' ) );
 	}
 	
 	/**
@@ -94,6 +95,19 @@ class WC_Search_Orders_By_Product {
 		if (!defined('DONOTCACHEPAGE'))
 			define("DONOTCACHEPAGE", "true");
 		// WP Super Cache constant
+	}
+	
+	/**
+	 * Show action links on the plugin screen.
+	 *
+	 * @param mixed $links Plugin Action links
+	 * @return array
+	 */
+	function sobp_action_links($links) {
+        $action_links = array(
+			'settings' => '<a href="' . admin_url( 'admin.php?page=wc-search-orders-by-product-settings' ) . '" aria-label="' . esc_attr__( 'View settings page', $this->token ) . '">' . esc_html__( 'Settings', $this->token ) . '</a>',
+		);
+		return array_merge( $action_links, $links );	    
 	}
 
 }

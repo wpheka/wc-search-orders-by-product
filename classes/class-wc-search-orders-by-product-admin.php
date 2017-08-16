@@ -6,6 +6,12 @@ class WC_Search_Orders_By_Product_Admin {
 		add_action('admin_enqueue_scripts', array(&$this, 'sobp_enqueue_admin_script'));
 		add_action( 'restrict_manage_posts', array(&$this,'sobp_display_products_search_dropdown_restrict'));
 		add_filter( 'request', array(&$this,'sobp_filter_orders_request_by_product'));
+		// Search orders Settings
+		add_action('admin_init', array( $this,'sobp_search_settings_init'));
+		add_action( 'admin_menu', array( $this, 'sobp_search_settings_menu' ), 20 );
+		// Reorders woocommerce sub menus
+		add_filter( 'menu_order', array( $this, 'sobp_menu_order' ) );
+		add_filter( 'custom_menu_order', array( $this, 'sobp_custom_menu_order' ) );
 	}
 
 	/**
@@ -197,5 +203,86 @@ class WC_Search_Orders_By_Product_Admin {
 		}
 		}
 		return $vars;
+	}
+	
+	function sobp_search_settings_init() {
+	    register_setting( 'sobp_search_options', 'sobp_settings', array($this, 'sobp_search_options_validate') );
+	}
+	
+	function sobp_search_settings_menu() {
+	    global $WC_Search_Orders_By_Product;
+	    if ( current_user_can( 'manage_woocommerce' ) ) {
+			add_submenu_page( 'woocommerce', __( 'WC Search Orders By Product Settings', $WC_Search_Orders_By_Product->text_domain ),  __( 'WC Search Orders By Product Settings', $WC_Search_Orders_By_Product->text_domain ) , 'manage_woocommerce', 'wc-search-orders-by-product-settings', array( $this, 'sobp_search_settings_page' ) );
+		}
+	}
+	
+	function sobp_search_settings_page() {?>
+        <div class="wrap">
+            <h1>WC Search Orders By Product Settings</h1>
+            <?php settings_errors(); ?>
+            <form action="options.php" method="post">
+                <?php settings_fields('sobp_search_options'); ?>
+                <?php $options = get_option('sobp_settings'); ?>
+                <table class="form-table">
+                    <tr>
+                        <td class="td-full">
+                            <label for="search_orders_by_product_type">
+                                <input name="sobp_settings[search_orders_by_product_type]" type="checkbox" id="search_orders_by_product_type" value="1"<?php checked('1', $options['search_orders_by_product_type']); ?> />
+                                <?php _e('Search Orders By Product Types'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-full">
+                            <label for="search_orders_by_product_category">
+                                <input name="sobp_settings[search_orders_by_product_category]" type="checkbox" id="search_orders_by_product_category" value="1"<?php checked('1', $options['search_orders_by_product_category']); ?> />
+                                <?php _e('Search Orders By Product Categories'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button(); ?>
+            </form>
+        </div>
+	<?php }
+	
+    // Sanitize and validate input. Accepts an array, return a sanitized array.
+    function sobp_search_options_validate($input) {
+        $input['search_orders_by_product_type'] = ( $input['search_orders_by_product_type'] == 1 ? 1 : 0 );
+        $input['search_orders_by_product_category'] = ( $input['search_orders_by_product_category'] == 1 ? 1 : 0 );
+        return $input;
+    }
+	
+	/**
+	 * Reorder the woocommerce menu items in admin.
+	 *
+	 * @param mixed $menu_order
+	 * @return array
+	 */
+	public function sobp_menu_order($menu_order) {
+	    global $submenu;
+        $settings = $submenu['woocommerce'];
+            foreach ( $settings as $key => $details ) {
+                if ( $details[2] == 'wc-search-orders-by-product-settings' ) {
+                    $index = $key;
+                    $store_index_data = $details;
+                }
+        }
+        if(!empty($index) && !empty($store_index_data)) {
+            $submenu['woocommerce'][] = $store_index_data;
+            unset( $submenu['woocommerce'][$index] );
+            # Reorder the menu based on the keys in ascending order
+            ksort( $submenu['woocommerce'] );
+        }
+	    return $menu_order;
+	}
+	
+	/**
+	 * Custom menu order.
+	 *
+	 * @return bool
+	 */
+	public function sobp_custom_menu_order() {
+		return current_user_can( 'manage_woocommerce' );
 	}
 }
