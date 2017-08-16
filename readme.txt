@@ -1,12 +1,12 @@
 === WC Search Orders By Product ===
 Contributors: akshayaswaroop
-Tags: woocommerce, search, filter, order, product, search orders, admin
+Tags: woocommerce, search, filter, order, product, search orders, admin, woocommerce search orders, wc search orders, search orders dashboard, wc search orders by product, woocommerce search orders by product
 Requires at least: 4.4
 Tested up to: 4.8
 Stable tag: 1.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
-Donate link: http://donatenow.wc.lt/?donate=akshaya.swaroop3291@gmail.com&method=PayPal
+Donate link: paypal.me/AKSHAYASWAROOP
 
 A simple plugin that helps you search your WooCommerce orders by product.
 
