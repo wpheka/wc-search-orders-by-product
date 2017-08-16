@@ -57,6 +57,9 @@ class WC_Search_Orders_By_Product_Admin {
 
 	public function display_products_search_dropdown() {
 		global $WC_Search_Orders_By_Product;
+
+		//var_dump($this->get_products_in_category($_GET['product_cat']));
+
 		$product_name = '';
 		$product_id = '';
 		if ( ! empty( $_GET['product_id'] ) ) {
@@ -72,10 +75,11 @@ class WC_Search_Orders_By_Product_Admin {
 		</select>
 		<?php
 		// Product type filtering
-		$terms   = get_terms( 'product_type' );
-		$output  = '<select name="search_product_type" id="dropdown_product_type">';
-		$output .= '<option value="">' . __( 'Search by product types', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
-		if(!empty($terms)) {
+		if($this->is_sobp_search_settings_active('search_orders_by_product_type')) {
+			$terms   = get_terms( 'product_type' );
+			$output  = '<select name="search_product_type" id="dropdown_product_type">';
+			$output .= '<option value="">' . __( 'Filter by product types', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
+			if(!empty($terms)) {
 					foreach ( $terms as $term ) {
 				$output .= '<option value="' . sanitize_title( $term->name ) . '" ';
 
@@ -125,9 +129,16 @@ class WC_Search_Orders_By_Product_Admin {
 					$output .= '> ' . ( is_rtl() ? '&larr;' : '&rarr;' ) . ' ' . __( 'Virtual', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
 				}
 			}
+			}
+
+			echo $output .= '</select>';			
 		}
 
-		echo $output .= '</select>';
+		// Filter orders by product category
+		if($this->is_sobp_search_settings_active('search_orders_by_product_category')) {
+			wc_product_dropdown_categories( array( 'option_select_text' => __( 'Filter by product category', $WC_Search_Orders_By_Product->text_domain ), 'show_uncategorized' => false ) );
+		}
+		
 	}
 
 	public function sobp_filter_orders_request_by_product($vars) {
@@ -201,8 +212,32 @@ class WC_Search_Orders_By_Product_Admin {
 				}
 			}
 		}
+
+		if (!empty($_GET['product_cat'])) {
+
+			}
 		}
 		return $vars;
+	}
+
+	/**
+	 * Get all product ids in a category (and its children).
+	 *
+	 * @param  int $category_slug
+	 * @return array
+	 */
+	public function get_products_in_category( $category_slug ) {
+		$term = get_term_by( 'slug', $category_slug, 'product_cat');
+		if ( $term && ! is_wp_error( $term ) ) {
+			$category_id = $term->term_id;
+			$term_ids    = get_term_children( $category_id, 'product_cat' );
+			$term_ids[]  = $category_id;
+			$product_ids = get_objects_in_term( $term_ids, 'product_cat' );
+
+			return array_unique( apply_filters( 'woocommerce_report_sales_by_category_get_products_in_category', $product_ids, $category_id ) );
+		}else{
+			return false;
+		}
 	}
 	
 	function sobp_search_settings_init() {
@@ -214,6 +249,16 @@ class WC_Search_Orders_By_Product_Admin {
 	    if ( current_user_can( 'manage_woocommerce' ) ) {
 			add_submenu_page( 'woocommerce', __( 'WC Search Orders By Product Settings', $WC_Search_Orders_By_Product->text_domain ),  __( 'WC Search Orders By Product Settings', $WC_Search_Orders_By_Product->text_domain ) , 'manage_woocommerce', 'wc-search-orders-by-product-settings', array( $this, 'sobp_search_settings_page' ) );
 		}
+	}
+
+	function is_sobp_search_settings_active($option) {
+		$settings = get_option('sobp_settings');
+
+		if (empty($settings)) {
+			return false;
+		}
+
+		return $settings[$option];
 	}
 	
 	function sobp_search_settings_page() {?>
