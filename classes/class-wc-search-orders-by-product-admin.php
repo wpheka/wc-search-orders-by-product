@@ -219,6 +219,74 @@ class WC_Search_Orders_By_Product_Admin {
 		}
 		return $vars;
 	}
+	/**
+	 * Get all order ids by product type
+	 *
+	 * @param  str $product_type
+	 * @return array
+	 */
+    public function sobp_get_orders_by_product_type($product_type) {
+    	$filtered_order_ids = array();	
+    	$all_orders = wc_get_orders( array(
+    		'limit'    => -1,
+    		'return'   => 'ids',
+    	) );	
+    	if ( ! empty( $all_orders ) ) {
+    		foreach ( $all_orders as $order_id ) {
+    			$order = wc_get_order( $order_id );
+    			foreach ( $order->get_items() as $item_id => $item ) {
+    				$product = $item->get_product();
+    				if(is_object($product)) {
+    					if ( $product->is_type($product_type)) {
+    						$filtered_order_ids[] = $order_id;						
+    					}
+    				}	
+    			}	
+    		}
+    	}
+    	if(!empty($filtered_order_ids)) {
+    		return array_unique($filtered_order_ids);	
+    	}
+    	return $filtered_order_ids;
+    }
+    
+    /**
+	 * Get all order ids by product category
+	 *
+	 * @param  str $product_category_slug
+	 * @return array
+	 */
+    public function sobp_get_orders_by_product_category($product_category_slug) {
+    	$filtered_order_ids = array();	
+    	$term = get_term_by( 'slug', $product_category_slug, 'product_cat');
+    	if ( $term && ! is_wp_error( $term ) ) {
+    		$category_id = $term->term_id;	
+    		$all_orders = wc_get_orders( array(
+    			'limit'    => -1,
+    			'return'   => 'ids',
+    		) );	
+    		if ( ! empty( $all_orders ) ) {
+    			foreach ( $all_orders as $order_id ) {
+    				$order = wc_get_order( $order_id );
+    				foreach ( $order->get_items() as $item_id => $item ) {
+    					$product = $item->get_product();
+    					if(is_object($product)) {
+    						if(!empty($product->get_category_ids())){
+    							if (in_array($category_id,$product->get_category_ids())) {
+    								$filtered_order_ids[] = $order_id;	
+    							}					
+    						}					
+    					}	
+    				}	
+    			}
+    		}
+    		if(!empty($filtered_order_ids)) {
+    			return array_unique($filtered_order_ids);	
+    		}
+    		return $filtered_order_ids;
+    	}
+    	return $filtered_order_ids;
+    }
 
 	/**
 	 * Get all product ids in a category (and its children).

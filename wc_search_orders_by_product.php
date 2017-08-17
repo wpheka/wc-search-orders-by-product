@@ -22,10 +22,21 @@ if(!defined('WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_TOKEN')) exit;
 if(!defined('WC_SEARCH_ORDERS_BY_PRODUCT_TEXT_DOMAIN')) exit;
 
 if(!class_exists('WC_Search_Orders_By_Product') && WC_Dependencies_Search_Order::is_woocommerce_active()) {
-	require_once(dirname(__FILE__).'/classes/class-wc-search-orders-by-product.php');
-	global $WC_Search_Orders_By_Product;
-	$WC_Search_Orders_By_Product = new WC_Search_Orders_By_Product( __FILE__ );
-	$GLOBALS['WC_Search_Orders_By_Product'] = $WC_Search_Orders_By_Product;
+    if(WC_Dependencies_Search_Order::sobp_get_woocommerce_version() >= 3.0) {
+    	require_once(dirname(__FILE__).'/classes/class-wc-search-orders-by-product.php');
+    	global $WC_Search_Orders_By_Product;
+    	$WC_Search_Orders_By_Product = new WC_Search_Orders_By_Product( __FILE__ );
+    	$GLOBALS['WC_Search_Orders_By_Product'] = $WC_Search_Orders_By_Product;       
+    }else{
+        add_action('admin_notices', 'sobp_required_woocommerce_version_notice');
+        if(!function_exists('sobp_required_woocommerce_version_notice')) {
+            function sobp_required_woocommerce_version_notice() { ?>
+                <div class="error">
+                    <p><?php _e('WC Search Orders By Product plugin requires at least WooCommerce 3.0', WC_SEARCH_ORDERS_BY_PRODUCT_TEXT_DOMAIN); ?></p>
+                </div>
+            <?php }
+        }
+    }
 }else {
     add_action('admin_notices', 'sobp_admin_notice');
     if (!function_exists('sobp_admin_notice')) {

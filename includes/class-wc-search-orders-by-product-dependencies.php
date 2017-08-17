@@ -35,5 +35,20 @@ class WC_Dependencies_Search_Order {
             self::init();
         return in_array('woocommerce-filter-orders-by-product/woocommerce-filter-orders-by-product.php', self::$active_plugins) || array_key_exists('woocommerce-filter-orders-by-product/woocommerce-filter-orders-by-product.php', self::$active_plugins);
     }
+    
+    public static function sobp_get_woocommerce_version(){
+        if ( ! function_exists( 'get_plugins' ) )
+            require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+        
+        $plugin_folder = get_plugins( '/' . 'woocommerce' );
+        $plugin_file = 'woocommerce.php';
+        
+        if ( isset( $plugin_folder[$plugin_file]['Version'] ) ) {
+            return $plugin_folder[$plugin_file]['Version'];
+        
+        } else {
+            return NULL;
+        }
+    }
 }
 
