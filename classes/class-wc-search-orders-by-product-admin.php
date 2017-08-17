@@ -58,8 +58,6 @@ class WC_Search_Orders_By_Product_Admin {
 	public function display_products_search_dropdown() {
 		global $WC_Search_Orders_By_Product;
 
-		//var_dump($this->get_products_in_category($_GET['product_cat']));
-
 		$product_name = '';
 		$product_id = '';
 		if ( ! empty( $_GET['product_id'] ) ) {
@@ -136,7 +134,23 @@ class WC_Search_Orders_By_Product_Admin {
 
 		// Filter orders by product category
 		if($this->is_sobp_search_settings_active('search_orders_by_product_category')) {
-			wc_product_dropdown_categories( array( 'option_select_text' => __( 'Filter by product category', $WC_Search_Orders_By_Product->text_domain ), 'show_uncategorized' => false ) );
+			$cat_terms = get_terms( 'product_cat');
+			$cat_output  = "<select name='search_product_cat' class='dropdown_product_cat'>";
+			$cat_output .= '<option value="">' . __( 'Filter by product category', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
+			if(!empty($cat_terms)) {
+				foreach ($cat_terms as $cat_term) {
+					$cat_output .= '<option value="' . sanitize_title( $cat_term->name ) . '" ';
+
+					if ( isset( $_GET['search_product_cat'] ) ) {
+					$cat_output .= selected( $cat_term->slug, $_GET['search_product_cat'], false );
+					}
+
+					$cat_output .= '>'.$cat_term->name;
+					$cat_output .= '</option>';
+				}
+			}
+			$cat_output .= "</select>";
+			echo $cat_output;
 		}
 		
 	}
@@ -144,76 +158,108 @@ class WC_Search_Orders_By_Product_Admin {
 	public function sobp_filter_orders_request_by_product($vars) {
 		global $typenow, $wp_query, $wpdb, $wp_post_statuses;
 		if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ) ) ) {
-		// Search orders by product.
-		if ( ! empty( $_GET['product_id'] ) ) {
-		$order_ids = $wpdb->get_col( $wpdb->prepare( "
-			SELECT order_id
-			FROM {$wpdb->prefix}woocommerce_order_items
-			WHERE order_item_id IN ( SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d )
-			AND order_item_type = 'line_item'
-			", $_GET['product_id'] ) );
+			$final_order_ids = array();
 
-			$order_ids = ! empty( $order_ids ) ? $order_ids : array( 0 );			
+			// Search orders by product
+			if(!empty( $_GET['product_id'] ) && empty($_GET['search_product_type']) && empty($_GET['search_product_cat'])) {
+				$product_order_ids = $wpdb->get_col( $wpdb->prepare( "
+				SELECT order_id
+				FROM {$wpdb->prefix}woocommerce_order_items
+				WHERE order_item_id IN ( SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d )
+				AND order_item_type = 'line_item'
+				", $_GET['product_id'] ) );
 
-			if (!empty($_GET['search_product_type'])) {
-				if (WC_Product_Factory::get_product_type($_GET['product_id'])==$_GET['search_product_type']) {
-					$vars['post__in'] = $order_ids;
+				// Force WP_Query return empty if don't found any order.
+				$product_order_ids = ! empty( $product_order_ids ) ? $product_order_ids : array( 0 );
+
+				$vars['post__in'] = $product_order_ids;
+			}
+
+			// Search orders by product type
+			if (!empty($_GET['search_product_type']) && empty($_GET['product_id']) && empty($_GET['search_product_cat'])) {
+				$product_type_order_ids = $this->sobp_get_orders_by_product_type($_GET['search_product_type']);
+				$product_type_order_ids = ! empty( $product_type_order_ids ) ? $product_type_order_ids : array( 0 );
+				$vars['post__in'] = $product_type_order_ids;
+			}
+
+			// Search orders by product category
+			if (!empty($_GET['search_product_cat']) && empty($_GET['product_id']) && empty($_GET['search_product_type'])) {
+				$product_category_order_ids = $this->sobp_get_orders_by_product_category($_GET['search_product_cat']);
+				$product_category_order_ids = ! empty( $product_category_order_ids ) ? $product_category_order_ids : array( 0 );
+				$vars['post__in'] = $product_category_order_ids;
+			}
+
+			// Search orders by product and product type
+			if(!empty( $_GET['product_id'] ) && !empty($_GET['search_product_type']) && empty($_GET['search_product_cat'])) {
+				$product_order_ids = $wpdb->get_col( $wpdb->prepare( "
+				SELECT order_id
+				FROM {$wpdb->prefix}woocommerce_order_items
+				WHERE order_item_id IN ( SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d )
+				AND order_item_type = 'line_item'
+				", $_GET['product_id'] ) );
+
+				$product_type_order_ids = $this->sobp_get_orders_by_product_type($_GET['search_product_type']);
+
+				if(!empty($product_order_ids) && !empty($product_type_order_ids)){
+					$vars['post__in'] = array_unique(array_intersect($product_order_ids, $product_type_order_ids));
 				}else{
 					$vars['post__in'] = array( 0 );
 				}
-			}else{
-				$vars['post__in'] = $order_ids;
-			}
 
 			}
-		if (!empty($_GET['search_product_type']) && empty($_GET['product_id'])) {
-			// get all product ids in orders
-			$product_ids = $wpdb->get_col( $wpdb->prepare( "
-			SELECT meta_value
-			FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = %s
-			", '_product_id' ) );
-			
-			if(!empty($product_ids)) {
-				$product_ids = array_unique($product_ids);
-				$product_ids_filter_type = array();				
-				foreach ($product_ids as $product_id) {
-					if (WC_Product_Factory::get_product_type($product_id)==$_GET['search_product_type']) {
-						$product_ids_filter_type[] = $product_id;
-					}					
+
+			// Search orders by product and product category
+			if(!empty( $_GET['product_id'] ) && !empty($_GET['search_product_cat']) && empty($_GET['search_product_type'])) {
+				$product_order_ids = $wpdb->get_col( $wpdb->prepare( "
+				SELECT order_id
+				FROM {$wpdb->prefix}woocommerce_order_items
+				WHERE order_item_id IN ( SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d )
+				AND order_item_type = 'line_item'
+				", $_GET['product_id'] ) );
+
+				$product_category_order_ids = $this->sobp_get_orders_by_product_category($_GET['search_product_cat']);
+
+				if(!empty($product_order_ids) && !empty($product_category_order_ids)){
+					$vars['post__in'] = array_unique(array_intersect($product_order_ids, $product_category_order_ids));
+				}else{
+					$vars['post__in'] = array( 0 );
 				}
 
-				if(!empty($product_ids_filter_type)) {
-					$orders_ids_arr = array();
-					foreach ($product_ids_filter_type as $prod_id) {
-						$order_ids_data = $wpdb->get_col( $wpdb->prepare( "
-						SELECT order_id
-						FROM {$wpdb->prefix}woocommerce_order_items
-						WHERE order_item_id IN ( SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d )
-						AND order_item_type = 'line_item'
-						", $prod_id ) );
-						if(!empty($order_ids_data)) {
-							$orders_ids_arr[] = array_unique($order_ids_data);
-						}
-					}
-					if(!empty($orders_ids_arr)) {
-						$final_order_ids = array();
-						foreach ($orders_ids_arr as $ord_arr) {
-							foreach ($ord_arr as $ord_id) {
-								$final_order_ids[] = $ord_id;
-							}
-						}
-						if(!empty($final_order_ids)) {
-							$final_order_ids = array_unique($final_order_ids);
-							$vars['post__in'] = $final_order_ids;
-						}
-					}
+			}
+
+			// Search orders by product type and product category
+			if(!empty($_GET['search_product_type']) && !empty($_GET['search_product_cat']) && empty( $_GET['product_id'] )) {
+
+				$product_type_order_ids = $this->sobp_get_orders_by_product_type($_GET['search_product_type']);
+
+				$product_category_order_ids = $this->sobp_get_orders_by_product_category($_GET['search_product_cat']);
+
+				if(!empty($product_type_order_ids) && !empty($product_category_order_ids)){
+					$vars['post__in'] = array_unique(array_intersect($product_type_order_ids, $product_category_order_ids));
 				}else{
 					$vars['post__in'] = array( 0 );
 				}
 			}
-		}
 
-		if (!empty($_GET['product_cat'])) {
+			// Search orders by product,product type and product category
+			if(!empty( $_GET['product_id'] ) && !empty($_GET['search_product_type']) && !empty($_GET['search_product_cat'])) {
+				$product_order_ids = $wpdb->get_col( $wpdb->prepare( "
+				SELECT order_id
+				FROM {$wpdb->prefix}woocommerce_order_items
+				WHERE order_item_id IN ( SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d )
+				AND order_item_type = 'line_item'
+				", $_GET['product_id'] ) );
+
+				$product_type_order_ids = $this->sobp_get_orders_by_product_type($_GET['search_product_type']);
+
+				$product_category_order_ids = $this->sobp_get_orders_by_product_category($_GET['search_product_cat']);
+
+				if(!empty($product_order_ids) && !empty($product_type_order_ids) && !empty($product_category_order_ids)){
+					$final_order_ids_arr = array( $product_order_ids, $product_type_order_ids, $product_category_order_ids);
+					$vars['post__in'] = call_user_func_array('array_intersect',$final_order_ids_arr);
+				}else{
+					$vars['post__in'] = array( 0 );
+				}
 
 			}
 		}
