@@ -4,7 +4,7 @@ Plugin Name: WC Search Orders By Product
 Plugin URI: https://github.com/AkshayaDev/WC-Search-Orders-By-Product
 Description: A simple plugin that helps you search your WooCommerce orders by product.
 Author: Akshaya Swaroop
-Version: 1.0
+Version: 1.1
 Author URI: https://github.com/AkshayaDev
 Requires at least: 4.4
 Tested up to: 4.8
