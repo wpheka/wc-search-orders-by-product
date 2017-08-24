@@ -317,8 +317,9 @@ class WC_Search_Orders_By_Product_Admin {
     				foreach ( $order->get_items() as $item_id => $item ) {
     					$product = $item->get_product();
     					if(is_object($product)) {
-    						if(!empty($product->get_category_ids())){
-    							if (in_array($category_id,$product->get_category_ids())) {
+    						$sobp_product_categories = $product->get_category_ids();
+    						if(!empty($sobp_product_categories)){
+    							if (in_array($category_id,$sobp_product_categories)) {
     								$filtered_order_ids[] = $order_id;	
     							}					
     						}					
