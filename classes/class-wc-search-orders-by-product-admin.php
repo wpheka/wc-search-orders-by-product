@@ -5,7 +5,8 @@ class WC_Search_Orders_By_Product_Admin {
 		//admin script and style
 		add_action('admin_enqueue_scripts', array(&$this, 'sobp_enqueue_admin_script'));
 		add_action( 'restrict_manage_posts', array(&$this,'sobp_display_products_search_dropdown_restrict'));
-		add_filter( 'request', array(&$this,'sobp_filter_orders_request_by_product'));
+		add_filter( 'request', array(&$this,'sobp_filter_orders_request_by_product_type_and_category'));
+		add_filter( 'posts_where', array(&$this,'sobp_filter_orders_request_by_product'));
 		// Search orders Settings
 		add_action('admin_init', array( $this,'sobp_search_settings_init'));
 		add_action( 'admin_menu', array( $this, 'sobp_search_settings_menu' ), 20 );
@@ -154,26 +155,28 @@ class WC_Search_Orders_By_Product_Admin {
 		}
 		
 	}
+	
+	public function sobp_filter_orders_request_by_product($where) {
+	    global $wpdb,$typenow;
+        
+        if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ), true ) ) {
+            if( is_search() ) {
+                // Search orders by product
+                if(!empty( $_GET['product_id'] ) && empty($_GET['search_product_type']) && empty($_GET['search_product_cat'])) {
+                    $orders = $wpdb->posts;
+                    $order_items = $wpdb->prefix . "woocommerce_order_items";  
+                    $order_itemmeta = $wpdb->prefix . "woocommerce_order_itemmeta";
+                    $product_id = intval($_GET['product_id']);
+                    $where .= " AND $product_id IN (SELECT $order_itemmeta.meta_value FROM $order_items LEFT JOIN $order_itemmeta on $order_itemmeta.order_item_id=$order_items.order_item_id WHERE $order_items.order_item_type='line_item' AND $order_itemmeta.meta_key='_product_id' AND $orders.ID=$order_items.order_id)";
+                }             
+            }
+        }
+        return $where;
+	}
 
-	public function sobp_filter_orders_request_by_product($vars) {
+	public function sobp_filter_orders_request_by_product_type_and_category($vars) {
 		global $typenow, $wp_query, $wpdb, $wp_post_statuses;
 		if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ) ) ) {
-			$final_order_ids = array();
-
-			// Search orders by product
-			if(!empty( $_GET['product_id'] ) && empty($_GET['search_product_type']) && empty($_GET['search_product_cat'])) {
-				$product_order_ids = $wpdb->get_col( $wpdb->prepare( "
-				SELECT order_id
-				FROM {$wpdb->prefix}woocommerce_order_items
-				WHERE order_item_id IN ( SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d )
-				AND order_item_type = 'line_item'
-				", $_GET['product_id'] ) );
-
-				// Force WP_Query return empty if don't found any order.
-				$product_order_ids = ! empty( $product_order_ids ) ? $product_order_ids : array( 0 );
-
-				$vars['post__in'] = $product_order_ids;
-			}
 
 			// Search orders by product type
 			if (!empty($_GET['search_product_type']) && empty($_GET['product_id']) && empty($_GET['search_product_cat'])) {
