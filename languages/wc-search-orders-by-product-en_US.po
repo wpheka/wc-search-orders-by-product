@@ -1,118 +1,183 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WC Search Orders By Product\n"
-"POT-Creation-Date: 2017-08-05 01:27+0530\n"
-"PO-Revision-Date: 2017-08-05 01:28+0530\n"
+"POT-Creation-Date: 2020-03-17 07:03+0530\n"
+"PO-Revision-Date: 2020-03-17 07:04+0530\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: en_US\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.0.1\n"
+"X-Generator: Poedit 2.3\n"
 "X-Poedit-Basepath: ..\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-Flags-xgettext: --add-comments=translators:\n"
-"X-Poedit-WPHeader: wc_search_orders_by_product.php\n"
+"X-Poedit-WPHeader: wc-search-orders-by-product.php\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
 "esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
 "_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
 "X-Poedit-SearchPath-0: .\n"
-"X-Poedit-SearchPathExcluded-0: *.js\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
 
-#: classes/class-wc-search-orders-by-product-admin.php:24
+#: includes/admin/class-wc-search-orders-by-product-admin.php:47
+msgid "View plugin settings"
+msgstr ""
+
+#: includes/admin/class-wc-search-orders-by-product-admin.php:47
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:89
+msgid "Settings"
+msgstr ""
+
+#: includes/admin/class-wc-search-orders-by-product-admin.php:66
 msgctxt "products select"
 msgid "No matches found"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:25
+#: includes/admin/class-wc-search-orders-by-product-admin.php:67
 msgctxt "products select"
 msgid "Loading failed"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:26
+#: includes/admin/class-wc-search-orders-by-product-admin.php:68
 msgctxt "products select"
 msgid "Please enter 1 or more characters"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:27
+#: includes/admin/class-wc-search-orders-by-product-admin.php:69
 msgctxt "products select"
 msgid "Please enter %qty% or more characters"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:28
+#: includes/admin/class-wc-search-orders-by-product-admin.php:70
 msgctxt "products select"
 msgid "Please delete 1 character"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:29
+#: includes/admin/class-wc-search-orders-by-product-admin.php:71
 msgctxt "products select"
 msgid "Please delete %qty% characters"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:30
+#: includes/admin/class-wc-search-orders-by-product-admin.php:72
 msgctxt "products select"
 msgid "You can only select 1 item"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:31
+#: includes/admin/class-wc-search-orders-by-product-admin.php:73
 msgctxt "products select"
 msgid "You can only select %qty% items"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:32
+#: includes/admin/class-wc-search-orders-by-product-admin.php:74
 msgctxt "products select"
 msgid "Loading more results&hellip;"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:33
+#: includes/admin/class-wc-search-orders-by-product-admin.php:75
 msgctxt "products select"
 msgid "Searching&hellip;"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:64
+#: includes/admin/class-wc-search-orders-by-product-admin.php:113
 msgid "Search for a product&hellip;"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:71
-msgid "Search by product types"
+#: includes/admin/class-wc-search-orders-by-product-admin.php:121
+msgid "Filter by product types"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:84
+#: includes/admin/class-wc-search-orders-by-product-admin.php:134
 msgid "Grouped product"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:87
+#: includes/admin/class-wc-search-orders-by-product-admin.php:137
 msgid "External/Affiliate product"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:90
+#: includes/admin/class-wc-search-orders-by-product-admin.php:140
 msgid "Variable product"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:93
+#: includes/admin/class-wc-search-orders-by-product-admin.php:143
 msgid "Simple product"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:111
+#: includes/admin/class-wc-search-orders-by-product-admin.php:161
 msgid "Downloadable"
 msgstr ""
 
-#: classes/class-wc-search-orders-by-product-admin.php:119
+#: includes/admin/class-wc-search-orders-by-product-admin.php:169
 msgid "Virtual"
 msgstr ""
 
-#: includes/wc-search-orders-by-product-core-functions.php:17
-msgid ""
-"Another orders search by product plugin is already installed, Please "
-"deactivate it first to install this plugin."
+#: includes/admin/class-wc-search-orders-by-product-admin.php:181
+msgid "Filter by product category"
 msgstr ""
 
-#: wc_search_orders_by_product.php:38
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:62
+msgid "WC Search Orders By Product Settings"
+msgstr ""
+
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:76
+msgid "WC Search Orders By Product Control"
+msgstr ""
+
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:93
 msgid ""
-"WC Search Orders By Product plugin requires <a href=\"http://wordpress.org/"
-"extend/plugins/woocommerce/\">WooCommerce</a> plugins to be active!"
+"This WooCommerce extension automatically adds product search, product type "
+"and product category filter dropdown in WooCommerce Orders screen. You can "
+"find orders by typing just a few characters of your product name. As you "
+"start typing in the search input, you will see instant results popping up "
+"inside the dropdown menu. The auto listing of the matching products with "
+"same characters inside the dropdown will help you in typo tolerance or if "
+"you misspell the product name."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product.php:70
+msgid "Cloning is forbidden."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product.php:79
+msgid "Unserializing instances of this class is forbidden."
+msgstr ""
+
+#: templates/admin/settings/settings-form-submit.php:9
+msgid "Saving Changes..."
+msgstr ""
+
+#: templates/admin/settings/settings-form-submit.php:9
+msgid "Changes Updated"
+msgstr ""
+
+#: templates/admin/settings/settings-form-submit.php:9
+msgid "Save Changes"
+msgstr ""
+
+#: templates/admin/settings/settings-form.php:10
+msgid "Search Orders By:"
+msgstr ""
+
+#: templates/admin/settings/settings-form.php:16
+msgid "Product Types"
+msgstr ""
+
+#: templates/admin/settings/settings-form.php:20
+msgid "Product Categories"
+msgstr ""
+
+#: templates/admin/settings/sidebar-support.php:18
+msgid "Need Help?"
+msgstr ""
+
+#: templates/admin/settings/sidebar-support.php:25
+#, php-format
+msgid "If you need some help contact us through our %s"
+msgstr ""
+
+#: templates/admin/settings/sidebar-support.php:25
+msgid "Site"
 msgstr ""
 
 #. Plugin Name of the plugin/theme

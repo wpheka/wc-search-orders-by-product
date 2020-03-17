@@ -1,32 +1,67 @@
 <?php
+/**
+ * WC_Search_Orders_By_Product
+ *
+ * @package WC_Search_Orders_By_Product
+ * @author      WC_Search_Orders_By_Product
+ * @link        https://github.com/AkshayaDev
+ * @since       1.0
+ * @version     1.0
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * WC_Search_Orders_By_Product_Admin Class.
+ *
+ * @class WC_Search_Orders_By_Product_Admin
+ */
 class WC_Search_Orders_By_Product_Admin {
 
-	public function __construct() {
+    /**
+     * WC_Search_Orders_By_Product_Admin Constructor.
+     */    
+    public function __construct() {
+        add_filter( 'plugin_action_links_' . WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_BASENAME, array( __CLASS__, 'plugin_action_links' ) );
+
 		//admin script and style
-		add_action('admin_enqueue_scripts', array(&$this, 'sobp_enqueue_admin_script'));
+		add_action('admin_enqueue_scripts', array(&$this, 'sobp_enqueue_admin_scripts_styles'));
 		add_action( 'restrict_manage_posts', array(&$this,'sobp_display_products_search_dropdown_restrict'));
 		add_filter( 'request', array(&$this,'sobp_filter_orders_request_by_product_type_and_category'));
 		add_filter( 'posts_where', array(&$this,'sobp_filter_orders_request_by_product'));
-		// Search orders Settings
-		add_action('admin_init', array( $this,'sobp_search_settings_init'));
-		add_action( 'admin_menu', array( $this, 'sobp_search_settings_menu' ), 20 );
+
 		// Reorders woocommerce sub menus
 		add_filter( 'menu_order', array( $this, 'sobp_menu_order' ) );
 		add_filter( 'custom_menu_order', array( $this, 'sobp_custom_menu_order' ) );
+    }
+
+	/**
+	 * Show action links on the plugin screen.
+	 *
+	 * @param mixed $links Plugin Action links.
+	 *
+	 * @return array
+	 */
+	public static function plugin_action_links( $links ) {
+		$action_links = array(
+			'settings' => '<a href="' . admin_url( 'admin.php?page=wc-search-orders-by-product-settings' ) . '" aria-label="' . esc_attr__( 'View plugin settings', wc_search_orders_by_product()->text_domain ) . '">' . esc_html__( 'Settings', wc_search_orders_by_product()->text_domain ) . '</a>',
+		);
+
+		return array_merge( $action_links, $links );
 	}
 
 	/**
 	 * Admin Scripts
 	 */
-
-	public function sobp_enqueue_admin_script() {
+	public function sobp_enqueue_admin_scripts_styles() {
 		global $WC_Search_Orders_By_Product;
 		$screen       = get_current_screen();
 		$screen_id    = $screen ? $screen->id : '';
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
-		$WC_Search_Orders_By_Product->library->sobp_load_select2_lib();
-		wp_register_script('search_orders_by_product_admin_js', $WC_Search_Orders_By_Product->plugin_url.'assets/admin/js/admin.js', array('jquery', 'select2_js'), $WC_Search_Orders_By_Product->version, true);
+		wp_enqueue_script('sobp_select2_js', $WC_Search_Orders_By_Product->plugin_url . 'assets/admin/js/select2.full.min.js', array('jquery'), $WC_Search_Orders_By_Product->version, true);
+		wp_enqueue_style('sobp_select2_css',  $WC_Search_Orders_By_Product->plugin_url . 'assets/admin/css/select2.min.css', array(), $WC_Search_Orders_By_Product->version);
+		wp_register_script('search_orders_by_product_admin_js', $WC_Search_Orders_By_Product->plugin_url.'assets/admin/js/admin.js', array('jquery', 'sobp_select2_js'), $WC_Search_Orders_By_Product->version, true);
 		wp_localize_script( 'search_orders_by_product_admin_js', 'wc_products_select_params', array(
 			'i18n_no_matches'           => _x( 'No matches found', 'products select', $WC_Search_Orders_By_Product->text_domain ),
 			'i18n_ajax_error'           => _x( 'Loading failed', 'products select', $WC_Search_Orders_By_Product->text_domain ),
@@ -48,6 +83,9 @@ class WC_Search_Orders_By_Product_Admin {
 
 	}
 
+	/**
+	 * Product search dropdown restriction
+	 */
 	public function sobp_display_products_search_dropdown_restrict() {
 		global $typenow;
 
@@ -56,6 +94,9 @@ class WC_Search_Orders_By_Product_Admin {
 		}
 	}
 
+	/**
+	 * Display product search dropdown
+	 */
 	public function display_products_search_dropdown() {
 		global $WC_Search_Orders_By_Product;
 
@@ -135,18 +176,18 @@ class WC_Search_Orders_By_Product_Admin {
 
 		// Filter orders by product category
 		if($this->is_sobp_search_settings_active('search_orders_by_product_category')) {
-			$cat_terms = get_terms( 'product_cat');
+			$cat_terms = get_terms( array('taxonomy' => 'product_cat', 'fields' => 'id=>name' ) );
 			$cat_output  = "<select name='search_product_cat' class='dropdown_product_cat'>";
 			$cat_output .= '<option value="">' . __( 'Filter by product category', $WC_Search_Orders_By_Product->text_domain ) . '</option>';
 			if(!empty($cat_terms)) {
-				foreach ($cat_terms as $cat_term) {
-					$cat_output .= '<option value="' . sanitize_title( $cat_term->name ) . '" ';
+				foreach ( $cat_terms as $cat_id => $cat_name ) {
+					$cat_output .= '<option value="' . $cat_id . '" ';
 
 					if ( isset( $_GET['search_product_cat'] ) ) {
-					$cat_output .= selected( $cat_term->slug, $_GET['search_product_cat'], false );
+					    $cat_output .= selected( $cat_id, $_GET['search_product_cat'], false );
 					}
 
-					$cat_output .= '>'.$cat_term->name;
+					$cat_output .= '>'.$cat_name;
 					$cat_output .= '</option>';
 				}
 			}
@@ -156,6 +197,68 @@ class WC_Search_Orders_By_Product_Admin {
 		
 	}
 	
+	/**
+	 * Get all product ids from orders
+	 */
+	private function get_order_product_ids() {
+		global $wpdb;
+		$t_posts = $wpdb->posts;
+		$t_order_items = $wpdb->prefix . "woocommerce_order_items";  
+		$t_order_itemmeta = $wpdb->prefix . "woocommerce_order_itemmeta";
+		$query  = "SELECT $t_order_itemmeta.meta_value FROM";
+		$query .= " $t_order_items LEFT JOIN $t_order_itemmeta";
+		$query .= " on $t_order_itemmeta.order_item_id=$t_order_items.order_item_id";
+		$query .= " WHERE $t_order_items.order_item_type='line_item'";
+		$query .= " AND $t_order_itemmeta.meta_key='_product_id'";
+		$query .= " AND $t_posts.ID=$t_order_items.order_id";
+		return $query;
+	}
+	
+	/**
+	 * Product category query
+	 */
+	private function query_product_category(){
+		global $wpdb;
+		$t_term_relationships = $wpdb->term_relationships;
+
+		$query  = "SELECT $t_term_relationships.term_taxonomy_id FROM $t_term_relationships WHERE $t_term_relationships.object_id IN (";
+		$query .= $this->get_order_product_ids();
+		$query .= ")";
+
+		return $query;
+	}
+	
+	/**
+	 * Get order id's by product type
+	 */
+	private function order_ids_by_product_type( $post_type, $product_type ) {
+        global $wpdb;
+        
+        $product_type_order_ids = $wpdb->get_col( "
+            SELECT DISTINCT o.ID
+            FROM {$wpdb->prefix}posts o
+            INNER JOIN {$wpdb->prefix}woocommerce_order_items oi
+                ON oi.order_id = o.ID
+            INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim
+                ON oi.order_item_id = oim.order_item_id
+            INNER JOIN {$wpdb->prefix}term_relationships tr
+                ON oim.meta_value = tr.object_id
+            INNER JOIN {$wpdb->prefix}term_taxonomy tt
+                ON tr.term_taxonomy_id = tt.term_taxonomy_id
+            INNER JOIN {$wpdb->prefix}terms t
+                ON tt.term_id = t.term_id
+            WHERE o.post_type = '$post_type'
+            AND oim.meta_key = '_product_id'
+            AND tt.taxonomy = 'product_type'
+            AND t.name = '{$product_type}'
+        ");
+        
+        return $product_type_order_ids;
+	}
+	
+	/**
+	 * Filter orders as per request
+	 */
 	public function sobp_filter_orders_request_by_product($where) {
 	    global $wpdb,$typenow;
         
@@ -163,33 +266,43 @@ class WC_Search_Orders_By_Product_Admin {
             if( is_search() ) {
                 // Search orders by product
                 if(!empty( $_GET['product_id'] ) && empty($_GET['search_product_type']) && empty($_GET['search_product_cat'])) {
-                    $orders = $wpdb->posts;
-                    $order_items = $wpdb->prefix . "woocommerce_order_items";  
-                    $order_itemmeta = $wpdb->prefix . "woocommerce_order_itemmeta";
                     $product_id = intval($_GET['product_id']);
-                    $where .= " AND $product_id IN (SELECT $order_itemmeta.meta_value FROM $order_items LEFT JOIN $order_itemmeta on $order_itemmeta.order_item_id=$order_items.order_item_id WHERE $order_items.order_item_type='line_item' AND $order_itemmeta.meta_key='_product_id' AND $orders.ID=$order_items.order_id)";
-                }             
+
+    				// Check if selected product is inside order query
+    				$where .= " AND $product_id IN (";
+    				$where .= $this->get_order_product_ids();
+    				$where .= ")";
+
+                }
+                
+                // Search orders by product category
+                if (!empty($_GET['search_product_cat']) && empty($_GET['product_id']) && empty($_GET['search_product_type'])) {
+                    $product_cat = intval($_GET['search_product_cat']);
+                    
+                    // Check if selected category is inside these orders
+                    $where .= " AND $product_cat IN (";
+                    $where .= $this->query_product_category();
+                    $where .= ")";
+                    
+                }
             }
         }
         return $where;
 	}
 
+	/**
+	 * Filter orders
+	 */
 	public function sobp_filter_orders_request_by_product_type_and_category($vars) {
-		global $typenow, $wp_query, $wpdb, $wp_post_statuses;
+		global $typenow, $wp_query, $wpdb, $wp_post_statuses, $post_type;
 		if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ) ) ) {
 
 			// Search orders by product type
 			if (!empty($_GET['search_product_type']) && empty($_GET['product_id']) && empty($_GET['search_product_cat'])) {
-				$product_type_order_ids = $this->sobp_get_orders_by_product_type($_GET['search_product_type']);
+				$product_type = $_GET['search_product_type'];
+                $product_type_order_ids = $this->order_ids_by_product_type( $post_type, $product_type );
 				$product_type_order_ids = ! empty( $product_type_order_ids ) ? $product_type_order_ids : array( 0 );
 				$vars['post__in'] = $product_type_order_ids;
-			}
-
-			// Search orders by product category
-			if (!empty($_GET['search_product_cat']) && empty($_GET['product_id']) && empty($_GET['search_product_type'])) {
-				$product_category_order_ids = $this->sobp_get_orders_by_product_category($_GET['search_product_cat']);
-				$product_category_order_ids = ! empty( $product_category_order_ids ) ? $product_category_order_ids : array( 0 );
-				$vars['post__in'] = $product_category_order_ids;
 			}
 
 			// Search orders by product and product type
@@ -201,10 +314,19 @@ class WC_Search_Orders_By_Product_Admin {
 				AND order_item_type = 'line_item'
 				", $_GET['product_id'] ) );
 
-				$product_type_order_ids = $this->sobp_get_orders_by_product_type($_GET['search_product_type']);
+                $product_type = $_GET['search_product_type'];
+                $product_type_order_ids = $this->order_ids_by_product_type( $post_type, $product_type );
 
 				if(!empty($product_order_ids) && !empty($product_type_order_ids)){
-					$vars['post__in'] = array_unique(array_intersect($product_order_ids, $product_type_order_ids));
+
+				    $final_order_ids = array_unique(array_intersect($product_order_ids, $product_type_order_ids));
+				    
+				    if(empty($final_order_ids)) {
+                        $vars['post__in'] = array( 0 );
+				    }else{
+                        $vars['post__in'] = $final_order_ids;
+				    }
+					
 				}else{
 					$vars['post__in'] = array( 0 );
 				}
@@ -223,7 +345,15 @@ class WC_Search_Orders_By_Product_Admin {
 				$product_category_order_ids = $this->sobp_get_orders_by_product_category($_GET['search_product_cat']);
 
 				if(!empty($product_order_ids) && !empty($product_category_order_ids)){
-					$vars['post__in'] = array_unique(array_intersect($product_order_ids, $product_category_order_ids));
+				    
+				    $final_order_ids = array_unique(array_intersect($product_order_ids, $product_category_order_ids));
+				    
+				    if(empty($final_order_ids)) {
+                        $vars['post__in'] = array( 0 );
+				    }else{
+                        $vars['post__in'] = $final_order_ids;
+				    }
+
 				}else{
 					$vars['post__in'] = array( 0 );
 				}
@@ -233,18 +363,27 @@ class WC_Search_Orders_By_Product_Admin {
 			// Search orders by product type and product category
 			if(!empty($_GET['search_product_type']) && !empty($_GET['search_product_cat']) && empty( $_GET['product_id'] )) {
 
-				$product_type_order_ids = $this->sobp_get_orders_by_product_type($_GET['search_product_type']);
+				$product_type = $_GET['search_product_type'];
+                $product_type_order_ids = $this->order_ids_by_product_type( $post_type, $product_type );
 
 				$product_category_order_ids = $this->sobp_get_orders_by_product_category($_GET['search_product_cat']);
 
 				if(!empty($product_type_order_ids) && !empty($product_category_order_ids)){
-					$vars['post__in'] = array_unique(array_intersect($product_type_order_ids, $product_category_order_ids));
+					
+				    $final_order_ids = array_unique(array_intersect($product_type_order_ids, $product_category_order_ids));
+				    
+				    if(empty($final_order_ids)) {
+                        $vars['post__in'] = array( 0 );
+				    }else{
+                        $vars['post__in'] = $final_order_ids;
+				    }
+					
 				}else{
 					$vars['post__in'] = array( 0 );
 				}
 			}
 
-			// Search orders by product,product type and product category
+			// Search orders by product, product type and product category
 			if(!empty( $_GET['product_id'] ) && !empty($_GET['search_product_type']) && !empty($_GET['search_product_cat'])) {
 				$product_order_ids = $wpdb->get_col( $wpdb->prepare( "
 				SELECT order_id
@@ -253,13 +392,22 @@ class WC_Search_Orders_By_Product_Admin {
 				AND order_item_type = 'line_item'
 				", $_GET['product_id'] ) );
 
-				$product_type_order_ids = $this->sobp_get_orders_by_product_type($_GET['search_product_type']);
+				$product_type = $_GET['search_product_type'];
+                $product_type_order_ids = $this->order_ids_by_product_type( $post_type, $product_type );
 
 				$product_category_order_ids = $this->sobp_get_orders_by_product_category($_GET['search_product_cat']);
 
 				if(!empty($product_order_ids) && !empty($product_type_order_ids) && !empty($product_category_order_ids)){
+					
 					$final_order_ids_arr = array( $product_order_ids, $product_type_order_ids, $product_category_order_ids);
-					$vars['post__in'] = call_user_func_array('array_intersect',$final_order_ids_arr);
+				    $final_order_ids = call_user_func_array('array_intersect',$final_order_ids_arr);
+				    
+				    if(empty($final_order_ids)) {
+                        $vars['post__in'] = array( 0 );
+				    }else{
+                        $vars['post__in'] = $final_order_ids;
+				    }
+					
 				}else{
 					$vars['post__in'] = array( 0 );
 				}
@@ -268,6 +416,7 @@ class WC_Search_Orders_By_Product_Admin {
 		}
 		return $vars;
 	}
+
 	/**
 	 * Get all order ids by product type
 	 *
@@ -302,12 +451,12 @@ class WC_Search_Orders_By_Product_Admin {
     /**
 	 * Get all order ids by product category
 	 *
-	 * @param  str $product_category_slug
+	 * @param  str $product_category_id
 	 * @return array
 	 */
-    public function sobp_get_orders_by_product_category($product_category_slug) {
+    public function sobp_get_orders_by_product_category($product_category_id) {
     	$filtered_order_ids = array();	
-    	$term = get_term_by( 'slug', $product_category_slug, 'product_cat');
+    	$term = get_term_by( 'id', $product_category_id, 'product_cat');
     	if ( $term && ! is_wp_error( $term ) ) {
     		$category_id = $term->term_id;	
     		$all_orders = wc_get_orders( array(
@@ -357,19 +506,11 @@ class WC_Search_Orders_By_Product_Admin {
 			return false;
 		}
 	}
-	
-	function sobp_search_settings_init() {
-	    register_setting( 'sobp_search_options', 'sobp_settings', array($this, 'sobp_search_options_validate') );
-	}
-	
-	function sobp_search_settings_menu() {
-	    global $WC_Search_Orders_By_Product;
-	    if ( current_user_can( 'manage_woocommerce' ) ) {
-			add_submenu_page( 'woocommerce', __( 'WC Search Orders By Product Settings', $WC_Search_Orders_By_Product->text_domain ),  __( 'WC Search Orders By Product Settings', $WC_Search_Orders_By_Product->text_domain ) , 'manage_woocommerce', 'wc-search-orders-by-product-settings', array( $this, 'sobp_search_settings_page' ) );
-		}
-	}
 
-	function is_sobp_search_settings_active($option) {
+	/**
+	 * Check if settings is enabled
+	 */
+	public function is_sobp_search_settings_active($option) {
 		$settings = get_option('sobp_settings');
 
 		if (empty($settings)) {
@@ -379,40 +520,10 @@ class WC_Search_Orders_By_Product_Admin {
 		return $settings[$option];
 	}
 	
-	function sobp_search_settings_page() {?>
-        <div class="wrap">
-            <h1>WC Search Orders By Product Settings</h1>
-            <?php settings_errors(); ?>
-            <div class="card">
-            <form action="options.php" method="post">
-                <?php settings_fields('sobp_search_options'); ?>
-                <?php $options = get_option('sobp_settings'); ?>
-                <table class="form-table">
-                    <tr>
-                        <td class="td-full">
-                            <label for="search_orders_by_product_type">
-                                <input name="sobp_settings[search_orders_by_product_type]" type="checkbox" id="search_orders_by_product_type" value="1"<?php checked('1', $options['search_orders_by_product_type']); ?> />
-                                <?php _e('Search Orders By Product Types'); ?>
-                            </label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="td-full">
-                            <label for="search_orders_by_product_category">
-                                <input name="sobp_settings[search_orders_by_product_category]" type="checkbox" id="search_orders_by_product_category" value="1"<?php checked('1', $options['search_orders_by_product_category']); ?> />
-                                <?php _e('Search Orders By Product Categories'); ?>
-                            </label>
-                        </td>
-                    </tr>
-                </table>
-                <?php submit_button(); ?>
-            </form>
-            </div>
-        </div>
-	<?php }
-	
-    // Sanitize and validate input. Accepts an array, return a sanitized array.
-    function sobp_search_options_validate($input) {
+	/**
+	 * Sanitize and validate input. Accepts an array, return a sanitized array.
+	 */
+    public function sobp_search_options_validate($input) {
         $input['search_orders_by_product_type'] = ( $input['search_orders_by_product_type'] == 1 ? 1 : 0 );
         $input['search_orders_by_product_category'] = ( $input['search_orders_by_product_category'] == 1 ? 1 : 0 );
         return $input;
@@ -450,4 +561,7 @@ class WC_Search_Orders_By_Product_Admin {
 	public function sobp_custom_menu_order() {
 		return current_user_can( 'manage_woocommerce' );
 	}
+
 }
+
+new WC_Search_Orders_By_Product_Admin();
