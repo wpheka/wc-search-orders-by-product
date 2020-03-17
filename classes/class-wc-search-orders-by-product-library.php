@@ -1,4 +1,7 @@
 <?php
+
+if(!defined('ABSPATH')) exit; // Exit if accessed directly
+
 class WC_Search_Orders_By_Product_Library {
   
   public $lib_path;

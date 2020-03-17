@@ -1,15 +1,18 @@
 <?php
 /*
-Plugin Name: WC Search Orders By Product
-Plugin URI: https://github.com/AkshayaDev/WC-Search-Orders-By-Product
-Description: A simple plugin that helps you search your WooCommerce orders by product.
-Author: Akshaya Swaroop
-Version: 1.1
-Author URI: https://github.com/AkshayaDev
-Requires at least: 4.4
-Tested up to: 4.8
-Text Domain: search_orders_by_product
-Domain Path: /languages/
+* Plugin Name: WC Search Orders By Product
+* Plugin URI: https://github.com/AkshayaDev/WC-Search-Orders-By-Product
+* Description: A simple plugin that helps you search your WooCommerce orders by product.
+* Author: Akshaya Swaroop
+* Version: 1.2
+* Author URI: https://github.com/AkshayaDev
+* Requires at least: 4.4
+* Tested up to: 5.3
+* Text Domain: search_orders_by_product
+* Domain Path: /languages/
+* License: GPLv3 or later
+* WC requires at least: 3.0
+* WC tested up to: 3.8
 */
 
 if(!defined('ABSPATH')) exit; // Exit if accessed directly

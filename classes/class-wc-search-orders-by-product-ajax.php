@@ -1,18 +1,27 @@
 <?php
+
+if(!defined('ABSPATH')) exit; // Exit if accessed directly
+
 class WC_Search_Orders_By_Product_Ajax {
 
+	/**
+	 * Class constructor
+	 */
 	public function __construct() {
 		add_action( 'wp_ajax_search_woo_products', array(&$this,'sobp_search_woo_products'));
 		add_action( 'wp_ajax_nopriv_search_woo_products', array(&$this,'sobp_search_woo_products'));
 	}
 
+	/**
+	 * Ajax product search
+	 */
 	public function sobp_search_woo_products( $term = '', $include_variations = false ) {
 		check_ajax_referer( 'search-woo-products', 'security' );
 
 		$term = wc_clean( empty( $term ) ? stripslashes( $_GET['term'] ) : $term );
 
 		if ( empty( $term ) ) {
-		wp_die();
+			wp_die();
 		}
 
 		$data_store = WC_Data_Store::load( 'product' );

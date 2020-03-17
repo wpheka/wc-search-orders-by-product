@@ -1,4 +1,7 @@
 <?php
+
+if(!defined('ABSPATH')) exit; // Exit if accessed directly
+
 class WC_Search_Orders_By_Product {
 
 	public $plugin_url;
@@ -71,10 +74,12 @@ class WC_Search_Orders_By_Product {
    * @return void
    */
   public function sobp_load_plugin_textdomain() {
-    $locale = apply_filters( 'plugin_locale', get_locale(), $this->token );
+	$locale = is_admin() && function_exists( 'get_user_locale' ) ? get_user_locale() : get_locale();
+	$locale = apply_filters( 'plugin_locale', $locale, $this->token );
 
-    load_textdomain( $this->text_domain, WP_LANG_DIR . "/wc-search-orders-by-product/wc-search-orders-by-product-$locale.mo" );
-    load_textdomain( $this->text_domain, $this->plugin_path . "/languages/wc-search-orders-by-product-$locale.mo" );
+	unload_textdomain( $this->text_domain );
+	load_textdomain( $this->text_domain, WP_LANG_DIR . '/wc-search-orders-by-product/' .$this->token.'-' . $locale . '.mo' );
+	load_plugin_textdomain( $this->text_domain, false, plugin_basename( dirname( $this->file ) ) . '/languages' );
   }
 
 	public function sobp_load_class($class_name = '') {
