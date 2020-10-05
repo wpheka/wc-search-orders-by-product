@@ -59,6 +59,11 @@ class WC_Search_Orders_By_Product_Admin {
 
 		$access = in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ), true );
 
+		// WooCommerce Subscription compatibility
+		if ($typenow === 'shop_subscription') {
+		  $access = false;
+    }
+
 		return apply_filters('sobp_restrict_by_post_type', $access, $typenow);
 	}
 
