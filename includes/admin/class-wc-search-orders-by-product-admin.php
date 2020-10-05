@@ -51,6 +51,23 @@ class WC_Search_Orders_By_Product_Admin {
 	}
 
 	/**
+	 * Restrict dropdown on WooCommerce Order post type
+	 *
+	 */
+	private function is_active_on_post_type() {
+		global $typenow;
+
+		$access = in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ), true );
+
+		// WooCommerce Subscription compatibility
+		if ($typenow === 'shop_subscription') {
+		  $access = false;
+    }
+
+		return apply_filters('sobp_restrict_by_post_type', $access, $typenow);
+	}
+
+	/**
 	 * Admin Scripts
 	 */
 	public function sobp_enqueue_admin_scripts_styles() {
@@ -87,9 +104,7 @@ class WC_Search_Orders_By_Product_Admin {
 	 * Product search dropdown restriction
 	 */
 	public function sobp_display_products_search_dropdown_restrict() {
-		global $typenow;
-
-		if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ) ) ) {
+		if ( $this->is_active_on_post_type() ) {
 			$this->display_products_search_dropdown();
 		}
 	}
@@ -260,9 +275,9 @@ class WC_Search_Orders_By_Product_Admin {
 	 * Filter orders as per request
 	 */
 	public function sobp_filter_orders_request_by_product($where) {
-	    global $wpdb,$typenow;
+	    global $wpdb;
         
-        if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ), true ) ) {
+        if ( $this->is_active_on_post_type() ) {
             if( is_search() ) {
                 // Search orders by product
                 if(!empty( $_GET['product_id'] ) && empty($_GET['search_product_type']) && empty($_GET['search_product_cat'])) {
