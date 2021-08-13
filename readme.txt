@@ -2,8 +2,8 @@
 Contributors: akshayaswaroop, wpheka
 Tags: wc search orders by product, woocommerce search orders by product,  woocommerce search orders by product name,  woocommerce search orders by product category,  woocommerce search orders by product type, woocommerce, search orders, admin, woocommerce search orders, wc search orders, search orders dashboard, search, filter, order, product
 Requires at least: 4.8
-Tested up to: 5.4
-Stable tag: 1.4
+Tested up to: 5.5
+Stable tag: 1.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: paypal.me/AKSHAYASWAROOP
@@ -19,9 +19,6 @@ WC Search Orders By Product does exactly what it says - This WooCommerce extensi
 * By product **type**
 * By product **category**
 
-For improving the user experience and performance, This plugin uses the functionality of AJAX-powered [Select2](https://github.com/select2/select2) select boxes.
-Select2 is licensed under MIT and Copyright (c) 2012-2015 Kevin Brown, Igor Vaynberg, and Select2 contributors.
-
 If you enjoyed this plugin then please put a review, that will encourage me to bring some more …
 
 == Installation ==
@@ -32,7 +29,7 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 
 1. Upload 'wc-Search-orders-by-product' to the '/wp-content/plugins/' directory or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to Admin area -> WooCommerce -> WC Search Orders By Product Settings
+3. Go to Admin area -> WPHEKA -> WC Search Orders By Product Settings
 4. Go to Admin area -> WooCommerce -> Orders
 5. Done!
 
@@ -47,6 +44,11 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 2. Plugin settings screen
 
 == Changelog ==
+
+= 1.5 - 2020-08-20 =
+* Enhancement - WooCommerce version 4.0 compatibility added.
+* Enhancement - Search functionality updated.
+* Enhancement - Deactivation feedback form updated.
 
 = 1.4 - 2020-04-20 =
 * Enhancement - Deactivation feedback form added.

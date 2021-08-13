@@ -1,7 +1,7 @@
 <?php
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit;
 }
 
 
@@ -9,183 +9,333 @@ if ( ! defined( 'ABSPATH' ) ) {
  * WC_Admin_Pointers Class.
  */
 class WC_Search_Orders_By_Product_Deactivation_Popup {
+	/**
+	 * URL to the API endpoint
+	 *
+	 * @var string
+	 */
+	private static $api_url = 'https://www.wpheka.com/wp-json/wpheka/v1/plugins/feedback';
 
-    /**
-     * Constructor.
-     */
-    public function __construct() {
-        add_action( 'admin_enqueue_scripts', array( $this, 'setup_popup_scripts' ) );
-    }
-    
-    public function setup_popup_scripts() {
+	/**
+	 * Tracker ID
+	 *
+	 * @var string
+	 */
+	private static $tracker_id = '93cba6b28bb6b1d477f097e4da0c7a69ba5193cba6b28bb6b1d477';
 
-        $plugin_token = str_replace("-", "_", wc_search_orders_by_product()->text_domain);
+	/**
+	 * Deactivation Modal
+	 *
+	 * @var string
+	 */
+	private static $deactivation_modal = 'wc-search-orders-by-product-deactivation-modal';
 
-        if ( ! $this->is_plugins_screen() ) {
-            return;
-        }        
+	/**
+	 * Hook into init event.
+	 */
+	public static function init() {
 
-        wp_register_style( $plugin_token . 'deactivation_popup_css', wc_search_orders_by_product()->plugin_url . 'assets/admin/css/jquery.modal.min.css');
-        wp_enqueue_style( $plugin_token . 'deactivation_popup_css' );
-        wp_register_script( $plugin_token . 'deactivation_popup_js', wc_search_orders_by_product()->plugin_url . 'assets/admin/js/jquery.modal.min.js', array('jquery'), '0.9.1', true);
-        wp_enqueue_script( $plugin_token . 'deactivation_popup_js');
+		// plugin deactivate actions.
+		add_action( 'plugin_action_links_' . plugin_basename( WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_FILE ), array( __CLASS__, 'plugin_action_links' ) );
+		add_action( 'admin_footer', array( __CLASS__, 'deactivate_scripts' ) );
+		add_action( 'wp_ajax_wpheka_sobp_submit_deactivation', array( __CLASS__, 'send_tracking_deactivation' ) );
+	}
 
-        wp_register_script( $plugin_token . 'deactivation_loading_overlay_js', wc_search_orders_by_product()->plugin_url . 'assets/admin/js/loadingoverlay.min.js',array('jquery'), '2.1.7', true);
-        wp_enqueue_script( $plugin_token . 'deactivation_loading_overlay_js');        
+	/**
+	 * send tracking deactivation data.
+	 *
+	 * @param boolean $override
+	 */
+	public static function send_tracking_deactivation() {
 
-        add_action( 'admin_footer-'. $GLOBALS['hook_suffix'], array( $this,'wpheka_admin_deactivation_popup_footer'), PHP_INT_MAX );
-    }
-    
-    public function wpheka_admin_deactivation_popup_footer() {
-        global $WC_Search_Orders_By_Product;
-        $license_key = 'Free';
-        $license_domain = get_site_url();
-        $license_email = get_option( 'admin_email' );
+		if ( empty( $_POST['deactivation_domain'] ) ) {
+			wp_send_json_error( array( 'error' => __( 'Something went wrong. Please try again later.', 'wc-search-orders-by-product' ) ) );
+			wp_die( -1 );
+		}
 
-        $plugin_token = str_replace("-", "_", wc_search_orders_by_product()->text_domain);
+		$feedback_url = self::$api_url;
 
-        $form_id = $plugin_token . '_form';
-    ?>
-<style>
-    form#<?php echo $form_id; ?> h1{
-        color: #c32d1b;
-    }
-    form#<?php echo $form_id; ?> {
-        max-width: 505px;
-    }
-    form#<?php echo $form_id; ?> label{
-        display: inline-block;
-        padding-bottom: 10px;
-    }
-    form#<?php echo $form_id; ?> input[type="text"]{
-        margin-bottom: 10px;
-        border-radius: 3px;
-        border: 1px solid #c32d1b;
-        height: 30px;
-        width: 100%;
-    }
-    form#<?php echo $form_id; ?> input[type="submit"]{
-        background: #c32d1b;
-        border: 0;
-        font-size: 16px;
-        line-height: 34px;
-        padding: 0 30px;
-        color: #fff;
-        border-radius: 3px;
-        cursor: pointer;
-    }
-</style>    
-<form id="<?php echo $form_id; ?>" method="post" action="" class="modal">
-    <?php
-    wp_nonce_field( $plugin_token . 'deactivate_feedback_nonce' );
-    ?>    
-    <h1>Quick Feedback</h1>
-    <p>If you have a moment, please let us know why you are deactivating this plugin:</p>
-    <hr>
+		$deactivation_domain = isset( $_POST['deactivation_domain'] ) ? sanitize_text_field( wp_unslash( $_POST['deactivation_domain'] ) ) : '';
+		$deactivation_license_key = isset( $_POST['deactivation_license_key'] ) ? sanitize_text_field( wp_unslash( $_POST['deactivation_license_key'] ) ) : '';
 
-    <label for="deactivation_reason"><b>Deactivation Reason</b></label><br>
-    <input type="radio" name="deactivation_reason" value="I couldn't understand how to make it work" required> I couldn't understand how to make it work.<br>
-    <input type="radio" name="deactivation_reason" value="I found a better plugin"> I found a better plugin.<br>
-    <input type="radio" name="deactivation_reason" value="The plugin is great, but I need specific feature that you don't support"> The plugin is great, but I need specific feature that you don't support.<br>
-    <input type="radio" name="deactivation_reason" value="The plugin is not working"> The plugin is not working.<br>
-    <input type="radio" name="deactivation_reason" value="It's not what I was looking for"> It's not what I was looking for.<br>
-    <input type="radio" name="deactivation_reason" value="The plugin didn't work as expected"> The plugin didn't work as expected.<br>
-    <input type="radio" name="deactivation_reason" value="It is a temporary deactivation"> It's a temporary deactivation<br>
-    <input type="radio" name="deactivation_reason" value="Other"> Other<br><br>
+		$email = isset( $_POST['deactivation_email'] ) ? filter_var( $_POST['deactivation_email'], FILTER_SANITIZE_EMAIL ) : '';
 
-    <input type="text" name="deactivation_reason_other" value="" placeholder="Kindly tell us the reason so that we can improve">
-    
-    <input type="hidden" name="deactivation_domain" value="<?php echo $license_domain; ?>">
-    
-    <input type="hidden" name="deactivation_license_key" value="<?php echo $license_key; ?>">
-    
-    <input type="hidden" name="email" value="<?php echo $license_email; ?>">
+		$reason_id = isset( $_POST['reason_id'] ) ? sanitize_text_field( wp_unslash( $_POST['reason_id'] ) ) : '';
+		$reason_info = isset( $_POST['reason_info'] ) ? sanitize_text_field( wp_unslash( $_POST['reason_info'] ) ) : '';
 
-    <input type="hidden" name="action" value="<?php echo $plugin_token; ?>_deactivation_popup" />
-    
-    <input type="submit" value="Submit & Deactivate">
-    <a id="<?php echo wc_search_orders_by_product()->text_domain; ?>-skip-deactivate" href="javascript:void()" style="float: right;">Skip & Deactivate</a>
-</form>
+		if ( empty( $reason_info ) ) {
+			$deactivation_reason  = empty( $reason_id ) ? '' : $reason_id;
+		} else {
+			$deactivation_reason  = $reason_info;
+		}
 
-<script type="text/javascript">
-<?php
-$deactivation_reason_other_text_box = '$(\'#'.$form_id.' input[name="deactivation_reason_other"]\')';
-$form_radio_var = $form_id.'radio';
-$form_radio = '$(\'#'.$form_id.' input[type="radio"]\')';
-$js_code = '/* <![CDATA[ */
-( function($) {
-'.$deactivation_reason_other_text_box.'.hide();
-var '.$form_radio_var.' = '.$form_radio.';
-'.$form_radio_var.'.on("change", function (event) {
-    event.preventDefault();
-    var radio_val = $( this ).val();
+		wp_remote_post(
+			$feedback_url,
+			array(
+				'timeout' => 30,
+				'body' => array(
+					'plugin' => 'WC Search Orders By Product',
+					'deactivation_reason' => $deactivation_reason,
+					'deactivation_domain' => $deactivation_domain,
+					'deactivation_license_key' => $deactivation_license_key,
+					'email' => $email,
+				),
+			)
+		);
 
-    if ( radio_val == "Other" ) {
-        '.$deactivation_reason_other_text_box.'.show();
-    } else {
-        '.$deactivation_reason_other_text_box.'.hide();
-    }
-    return false;
-});
-} )(jQuery);
-/* ]]> */';
-echo $js_code;?>
-</script>
-<script type="text/javascript">
-    /* <![CDATA[ */
-    ( function($) {
+		wp_send_json_success();
 
-        var deactivateLink = $('#the-list').find('[data-slug="<?php echo wc_search_orders_by_product()->text_domain; ?>"] span.deactivate a');
+		wp_die();
+	}
 
-        if(deactivateLink.length){
-            $('#<?php echo wc_search_orders_by_product()->text_domain; ?>-skip-deactivate').attr('href',deactivateLink.attr('href'));
+	/**
+	 * Hook into action links and modify the deactivate link
+	 *
+	 * @param  array $links
+	 *
+	 * @return array
+	 */
+	public static function plugin_action_links( $links ) {
 
-            deactivateLink.on('click', function (event) {
-                event.preventDefault();
+		if ( array_key_exists( 'deactivate', $links ) ) {
+			$links['deactivate'] = str_replace( '<a', '<a class="' . self::$tracker_id . '-deactivate-link"', $links['deactivate'] );
+		}
 
-                if(jQuery().modal) {
-                    $('#<?php echo $form_id; ?>').modal();
-                }
-            });        
+		return $links;
+	}
 
-            $('#<?php echo $form_id; ?>').submit(function(e) {
-                e.preventDefault(); // don't submit multiple times
+	/**
+	 * Handle the plugin deactivation feedback
+	 *
+	 * @return void
+	 */
+	public static function deactivate_scripts() {
+		global $pagenow;
 
-                formData = $(this).serialize();
+		if ( 'plugins.php' != $pagenow ) {
+			return;
+		}
 
-                if(jQuery().LoadingOverlay) {
-                    $('#<?php echo $form_id; ?>').LoadingOverlay("show");
-                }
+		$license_key = 'Free';
+		$license_domain = get_site_url();
+		$license_email = get_option( 'admin_email' );
 
-                $.post('<?php echo admin_url( 'admin-ajax.php' ); ?>', formData, function(response) {
-                    if(response) {
-                        $.modal.close();
-                        if(jQuery().LoadingOverlay) {
-                            $('#<?php echo $form_id; ?>').LoadingOverlay("hide", true);
-                        }                    
-                        location.href = deactivateLink.attr('href');
-                    }
-                });
+		$deactivation_modal_class = '.' . self::$deactivation_modal;
+		$deactivation_modal_id = self::$tracker_id . '-' . self::$deactivation_modal;
 
-            });
-        } else {
-            location.href = deactivateLink.attr('href');
-        }
-    
-    } )(jQuery);
-    /* ]]> */
-</script>
-    <?php
-    }
+		$reasons = array(
+			array(
+				'id'          => 'could-not-understand',
+				'text'        => 'I couldn\'t understand how to make it work',
+				'type'        => 'textarea',
+				'placeholder' => 'Would you like us to assist you?',
+			),
+			array(
+				'id'          => 'found-better-plugin',
+				'text'        => 'I found a better plugin',
+				'type'        => 'text',
+				'placeholder' => 'Which plugin?',
+			),
+			array(
+				'id'          => 'not-have-that-feature',
+				'text'        => 'The plugin is great, but I need specific feature that you don\'t support',
+				'type'        => 'textarea',
+				'placeholder' => 'Could you tell us more about that feature?',
+			),
+			array(
+				'id'          => 'is-not-working',
+				'text'        => 'The plugin is not working',
+				'type'        => 'textarea',
+				'placeholder' => 'Could you tell us a bit more whats not working?',
+			),
+			array(
+				'id'          => 'looking-for-other',
+				'text'        => 'It\'s not what I was looking for',
+				'type'        => '',
+				'placeholder' => '',
+			),
+			array(
+				'id'          => 'did-not-work-as-expected',
+				'text'        => 'The plugin didn\'t work as expected',
+				'type'        => 'textarea',
+				'placeholder' => 'What did you expect?',
+			),
+			array(
+				'id'          => 'other',
+				'text'        => 'Other',
+				'type'        => 'textarea',
+				'placeholder' => 'Could you tell us a bit more?',
+			),
+		);
 
-    /**
-     * @since 2.3.0
-     * @access private
-     */
-    private function is_plugins_screen() {
-        return in_array( get_current_screen()->id, [ 'plugins', 'plugins-network' ] );
-    }
+		?>
 
+		<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>" id="<?php echo $deactivation_modal_id; ?>">
+			<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-wrap">
+				<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-header">
+					<h3><?php echo esc_html( 'If you have a moment, please let us know why you are deactivating:', 'wc-search-orders-by-product' ); ?></h3>
+				</div>
+
+				<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-body">
+					<ul class="reasons">
+						<?php foreach ( $reasons as $reason ) { ?>
+							<li data-type="<?php echo esc_attr( $reason['type'] ); ?>" data-placeholder="<?php echo esc_attr( $reason['placeholder'] ); ?>">
+								<label><input type="radio" name="deactivation_reason" value="<?php echo esc_attr( $reason['text'] ); ?>"> <?php echo esc_html( $reason['text'] ); ?></label>
+							</li>
+						<?php } ?>
+					</ul>
+					<input type="hidden" name="deactivation_domain" value="<?php echo esc_attr( $license_domain ); ?>">
+
+					<input type="hidden" name="deactivation_license_key" value="<?php echo esc_attr( $license_key ); ?>">
+
+					<input type="hidden" name="email" value="<?php echo esc_attr( $license_email ); ?>">
+				</div>
+
+				<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-footer">
+					<a href="#" class="dont-bother-me"><?php echo esc_html( 'I rather wouldn\'t say', 'wc-search-orders-by-product' ); ?></a>
+					<button class="button-secondary"><?php echo esc_html( 'Submit & Deactivate', 'wc-search-orders-by-product' ); ?></button>
+					<button class="button-primary"><?php echo esc_html( 'Cancel', 'wc-search-orders-by-product' ); ?></button>
+				</div>
+			</div>
+		</div>
+
+		<style type="text/css">
+			<?php echo $deactivation_modal_class; ?> {
+				position: fixed;
+				z-index: 99999;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				background: rgba(0,0,0,0.5);
+				display: none;
+			}
+
+			<?php echo $deactivation_modal_class; ?>.modal-active {
+				display: block;
+			}
+
+			<?php echo $deactivation_modal_class; ?>-wrap {
+				width: 475px;
+				position: relative;
+				margin: 10% auto;
+				background: #fff;
+			}
+
+			<?php echo $deactivation_modal_class; ?>-header {
+				border-bottom: 1px solid #eee;
+				padding: 8px 20px;
+			}
+
+			<?php echo $deactivation_modal_class; ?>-header h3 {
+				line-height: 150%;
+				margin: 0;
+			}
+
+			<?php echo $deactivation_modal_class; ?>-body {
+				padding: 5px 20px 20px 20px;
+			}
+
+			<?php echo $deactivation_modal_class; ?>-body .reason-input {
+				margin-top: 5px;
+				margin-left: 20px;
+			}
+
+			<?php echo $deactivation_modal_class; ?>-body textarea, <?php echo $deactivation_modal_class; ?>-body input[type="text"]{
+				width: 100%;
+			}
+
+			<?php echo $deactivation_modal_class; ?>-footer {
+				border-top: 1px solid #eee;
+				padding: 12px 20px;
+				text-align: right;
+			}
+		</style>
+
+		<script type="text/javascript">
+			(function($) {
+				$(function() {
+					var modal = $( '#<?php echo $deactivation_modal_id; ?>' );
+					var deactivateLink = '';
+
+					$( '#the-list' ).on('click', 'a.<?php echo self::$tracker_id; ?>-deactivate-link', function(e) {
+						e.preventDefault();
+
+						modal.addClass('modal-active');
+						deactivateLink = $(this).attr('href');
+						modal.find('a.dont-bother-me').attr('href', deactivateLink).css('float', 'left');
+					});
+
+					modal.on('click', 'button.button-primary', function(e) {
+						e.preventDefault();
+
+						modal.removeClass('modal-active');
+					});
+
+					modal.on('click', 'input[type="radio"]', function () {
+						var parent = $(this).parents('li:first');
+
+						modal.find('.reason-input').remove();
+
+						var inputType = parent.data('type'),
+							inputPlaceholder = parent.data('placeholder'),
+							reasonInputHtml = '<div class="reason-input">' + ( ( 'text' === inputType ) ? '<input type="text" size="40" />' : '<textarea rows="5" cols="45"></textarea>' ) + '</div>';
+
+						if ( inputType !== '' ) {
+							parent.append( $(reasonInputHtml) );
+							parent.find('input, textarea').attr('placeholder', inputPlaceholder).focus();
+						}
+					});
+
+					modal.on('click', 'button.button-secondary', function(e) {
+						e.preventDefault();
+
+						var button = $(this);
+
+						if ( button.hasClass('disabled') ) {
+							return;
+						}
+
+						var $radio = $( 'input[type="radio"]:checked', modal );
+
+						var $deactivation_domain = $( 'input[name="deactivation_domain"]', modal );
+						var $deactivation_license_key = $( 'input[name="deactivation_license_key"]', modal );
+						var $deactivation_email = $( 'input[name="email"]', modal );
+
+						var $selected_reason = $radio.parents('li:first'),
+							$input = $selected_reason.find('textarea, input[type="text"]');
+
+						$.ajax({
+							url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
+							type: 'POST',
+							data: {
+								action: 'wpheka_sobp_submit_deactivation',
+								reason_id: ( 0 === $radio.length ) ? 'none' : $radio.val(),
+								reason_info: ( 0 !== $input.length ) ? $input.val().trim() : '',
+								deactivation_domain: ( 0 !== $deactivation_domain.length ) ? $deactivation_domain.val().trim() : '',
+								deactivation_license_key: ( 0 !== $deactivation_license_key.length ) ? $deactivation_license_key.val().trim() : '',
+								deactivation_email: ( 0 !== $deactivation_email.length ) ? $deactivation_email.val().trim() : '',
+							},
+							beforeSend: function() {
+								button.addClass('disabled');
+								button.text('Processing...');
+							},
+							success: function( response ) {
+								if ( response.success ) {
+									window.location.href = deactivateLink;
+								} else {
+									window.alert( response.data.error );
+									window.location.href = deactivateLink;
+								}
+							}
+						});
+					});
+				});
+			}(jQuery));
+		</script>
+
+		<?php
+	}
 }
 
-new WC_Search_Orders_By_Product_Deactivation_Popup();
+WC_Search_Orders_By_Product_Deactivation_Popup::init();

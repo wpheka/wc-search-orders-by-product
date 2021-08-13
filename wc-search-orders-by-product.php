@@ -1,19 +1,21 @@
 <?php
-/*
-* Plugin Name: WC Search Orders By Product
-* Plugin URI: https://wpheka.com/product/wc-search-orders-by-product/
-* Description: The <code><strong>WC Search Orders By Product</strong></code> plugin helps you search your WooCommerce orders by product name, type and category.
-* Author: WPHEKA
-* Version: 1.4
-* Author URI: https://wpheka.com/
-* Requires at least: 4.4
-* Tested up to: 5.4
-* Text Domain: wc-search-orders-by-product
-* Domain Path: /languages/
-* License: GPLv3 or later
-* WC requires at least: 3.0
-* WC tested up to: 4.0.1
-*/
+/**
+ * Plugin Name: WC Search Orders By Product
+ * Plugin URI: https://www.wpheka.com/product/wc-search-orders-by-product
+ * Description: The <code><strong>WC Search Orders By Product</strong></code> plugin helps you search your WooCommerce orders by product name, type and category.
+ * Author: WPHEKA
+ * Author URI: https://www.wpheka.com/
+ * Version: 1.5
+ * Requires at least: 4.4
+ * Tested up to: 5.5
+ * WC requires at least: 3.0
+ * WC tested up to: 4.4.0
+ * Text Domain: wc-search-orders-by-product
+ * Domain Path: /languages
+ * License: GPLv3 or later
+ *
+ * @package WC_Search_Orders_By_Product
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.

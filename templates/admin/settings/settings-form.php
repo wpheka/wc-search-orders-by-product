@@ -5,12 +5,12 @@ if ( ! defined( 'ABSPATH' ) ) { // If this file is called directly.
 
 ?>
 <form method="post" id="plugin-settings-form">
-	<div class='aks-box'>
+	<div class='wpheka-box'>
 		<fieldset class='mb22'>
-			<legend class='aks-box-title-bar aks-box-title-bar__small mb22'><h3><?php esc_html_e( 'Search Orders By:', wc_search_orders_by_product()->text_domain ); ?></h3></legend>
-			<div id="custom-url-form">
+			<legend class='wpheka-box-title-bar wpheka-box-title-bar__small mb22'><h3><?php esc_html_e( 'Search Orders By:', wc_search_orders_by_product()->text_domain ); ?></h3></legend>
+			<div id="wpheka-custom-form">
 				<h3>Enable</h3>
-				<div id="custom-url-form-fields">
+				<div id="wpheka-custom-form-fields">
 					<label for="search_orders_by_product_type">
 					    <input name="search_orders_by_product_type" type="checkbox" id="search_orders_by_product_type" value="1"<?php checked('1', $options['search_orders_by_product_type']); ?> />
 					    <?php _e('Product Types'); ?>
