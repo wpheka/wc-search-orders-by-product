@@ -294,7 +294,13 @@ class WC_Search_Orders_By_Product_Admin {
 	 */
 	public function sobp_filter_orders( $query_vars ) {
 		global $typenow;
+
 		if ( in_array( $typenow, wc_get_order_types( 'order-meta-boxes' ), true ) ) {
+
+			// return $query_vars on trash orders page.
+			if ( ! empty( $query_vars['post_status'] ) && ('trash' == $query_vars['post_status']) ) {
+				return $query_vars;
+			}
 
 			$order_ids = self::get_order_ids();
 
