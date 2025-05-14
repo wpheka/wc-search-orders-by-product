@@ -2,8 +2,8 @@
 Contributors: akshayaswaroop, wpheka
 Tags: wc search orders by product, woocommerce search orders by product,  woocommerce search orders by product name,  woocommerce search orders by product category,  woocommerce search orders by product type, woocommerce, search orders, admin, woocommerce search orders, wc search orders, search orders dashboard, search, filter, order, product
 Requires at least: 4.8
-Tested up to: 6.0.2
-Stable tag: 1.9
+Tested up to: 6.8.1
+Stable tag: 3.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: paypal.me/AKSHAYASWAROOP
@@ -44,6 +44,16 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 2. Plugin settings screen
 
 == Changelog ==
+
+= 3.1 - 2025-05-14 =
+* Enhancement - WooCommerce HPOS compatibility added.
+* Enhancement - WooCommerce version 9.8.5 compatibility added.
+
+= 3.0 - 2024-11-30 =
+* Enhancement - WooCommerce version 9.4.2 compatibility added.
+
+= 2.0 - 2023-08-24 =
+* Enhancement - WordPress version 6.3 compatibility added.
 
 = 1.9 - 2022-10-21 =
 * Fix - woocommerce trashed orders visibility.
