@@ -36,7 +36,12 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Ajax', false ) ) :
 		 */
 		public function action_save_sobp_plugin_data() {
 			check_ajax_referer( 'save-plugin-data', 'sobp_nonce' );
-			update_option( 'sobp_settings', $_POST );
+			$settings = array(
+			'search_orders_by_product_type'     => isset( $_POST['search_orders_by_product_type'] ) ? absint( $_POST['search_orders_by_product_type'] ) : 0,
+			'search_orders_by_product_category' => isset( $_POST['search_orders_by_product_category'] ) ? absint( $_POST['search_orders_by_product_category'] ) : 0,
+		);
+
+		update_option( 'sobp_settings', $settings );
 			wp_send_json_success();
 			wp_die();
 		}
@@ -58,27 +63,28 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Ajax', false ) ) :
 			$deactivation_reason = '';
 			$deactivation_domain = '';
 			$deactivation_license_key = '';
+			$email = '';
 
 			if ( ! empty( $_POST['deactivation_reason'] ) ) {
-				$deactivation_reason = $_POST['deactivation_reason'];
+				$deactivation_reason = sanitize_text_field( wp_unslash( $_POST['deactivation_reason'] ) );
 
 				if ( $deactivation_reason == 'Other' ) {
 					if ( ! empty( $_POST['deactivation_reason_other'] ) ) {
-						$deactivation_reason = $_POST['deactivation_reason_other'];
+						$deactivation_reason = sanitize_textarea_field( wp_unslash( $_POST['deactivation_reason_other'] ) );
 					}
 				}
 			}
 
 			if ( ! empty( $_POST['deactivation_domain'] ) ) {
-				$deactivation_domain = $_POST['deactivation_domain'];
+				$deactivation_domain = esc_url_raw( wp_unslash( $_POST['deactivation_domain'] ) );
 			}
 
 			if ( ! empty( $_POST['deactivation_license_key'] ) ) {
-				$deactivation_license_key = $_POST['deactivation_license_key'];
+				$deactivation_license_key = sanitize_text_field( wp_unslash( $_POST['deactivation_license_key'] ) );
 			}
 
 			if ( ! empty( $_POST['email'] ) ) {
-				$email = $_POST['email'];
+				$email = sanitize_email( wp_unslash( $_POST['email'] ) );
 			}
 
 			wp_remote_post(

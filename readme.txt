@@ -2,8 +2,8 @@
 Contributors: akshayaswaroop, wpheka
 Tags: wc search orders by product, woocommerce search orders by product,  woocommerce search orders by product name,  woocommerce search orders by product category,  woocommerce search orders by product type, woocommerce, search orders, admin, woocommerce search orders, wc search orders, search orders dashboard, search, filter, order, product
 Requires at least: 4.8
-Tested up to: 6.8.1
-Stable tag: 3.1
+Tested up to: 6.9.1
+Stable tag: 3.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: paypal.me/AKSHAYASWAROOP
@@ -44,6 +44,18 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 2. Plugin settings screen
 
 == Changelog ==
+
+= 3.2 - 2026-02-12 =
+* Security - Fixed SQL injection vulnerabilities in product type filtering.
+* Security - Added proper input sanitization for all $_GET parameters.
+* Security - Added proper input sanitization for AJAX form submissions.
+* Security - Improved output escaping in product category dropdown.
+* Fix - Fixed HPOS filters to use woocommerce_order_items table instead of empty analytics table.
+* Fix - Corrected all HPOS filter methods (product, category, type) to query correct tables.
+* Fix - Fixed unclosed HTML option tag in product search dropdown.
+* Fix - Fixed TypeError when filtering orders by product (sanitization compatibility issue).
+* Enhancement - WooCommerce version 10.5.1 compatibility added.
+* Enhancement - WordPress version 6.9.1 compatibility added.
 
 = 3.1 - 2025-05-14 =
 * Enhancement - WooCommerce HPOS compatibility added.

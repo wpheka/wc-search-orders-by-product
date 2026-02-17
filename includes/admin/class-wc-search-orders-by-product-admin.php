@@ -82,7 +82,7 @@ class WC_Search_Orders_By_Product_Admin
         }
         ?>
         <select class="wc-product-search" id="product_id" name="product_id" data-placeholder="<?php esc_attr_e('Search for a product&hellip;', $WC_Search_Orders_By_Product->text_domain); ?>" data-allow_clear="true">
-            <option value="<?php echo esc_attr($product_id); ?>" selected="selected"><?php echo htmlspecialchars(wp_kses_post($product_name)); // htmlspecialchars to prevent XSS when rendered by selectWoo. ?><option>
+            <option value="<?php echo esc_attr($product_id); ?>" selected="selected"><?php echo htmlspecialchars(wp_kses_post($product_name)); // htmlspecialchars to prevent XSS when rendered by selectWoo. ?></option>
         </select>
         <?php
         // Product type filtering.
@@ -104,22 +104,18 @@ class WC_Search_Orders_By_Product_Admin
             foreach (get_terms('product_cat') as $term) {
                 $product_categories[ $term->term_id ] = $term->name;
             }
-            $cat_output  = "<select name='search_product_cat' class='dropdown_product_cat'>";
-            $cat_output .= '<option value="">' . __('Filter by product category', $WC_Search_Orders_By_Product->text_domain) . '</option>';
-            if (! empty($product_categories)) {
-                foreach ($product_categories as $cat_id => $cat_name) {
-                    $cat_output .= '<option value="' . $cat_id . '" ';
-
-                    if (isset($_GET['search_product_cat'])) {
-                        $cat_output .= selected($cat_id, $_GET['search_product_cat'], false);
-                    }
-
-                    $cat_output .= '>' . $cat_name;
-                    $cat_output .= '</option>';
-                }
-            }
-            $cat_output .= '</select>';
-            echo $cat_output;
+            ?>
+            <select name='search_product_cat' class='dropdown_product_cat'>
+                <option value=""><?php echo esc_html__('Filter by product category', $WC_Search_Orders_By_Product->text_domain); ?></option>
+                <?php if (! empty($product_categories)) : ?>
+                    <?php foreach ($product_categories as $cat_id => $cat_name) : ?>
+                        <option value="<?php echo esc_attr($cat_id); ?>" <?php echo isset($_GET['search_product_cat']) ? selected($cat_id, absint($_GET['search_product_cat']), false) : ''; ?>>
+                            <?php echo esc_html($cat_name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </select>
+            <?php
         }
     }
 
@@ -200,6 +196,7 @@ class WC_Search_Orders_By_Product_Admin
         $order_id_list   = self::get_sanitized_id_list($order_ids);
         $product_id_list = self::get_sanitized_id_list($product_ids);
 
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Variables are sanitized via get_sanitized_id_list
         return $wpdb->get_col(
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
@@ -210,6 +207,7 @@ class WC_Search_Orders_By_Product_Admin
 			AND im.meta_value IN ( {$product_id_list} )
 		"
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /**
@@ -227,17 +225,18 @@ class WC_Search_Orders_By_Product_Admin
         $order_id_list   = self::get_sanitized_id_list($order_ids);
         $product_id_list = self::get_sanitized_id_list($product_ids);
 
-        // Table: wp_wc_order_product_lookup (used by HPOS for quick access to products in orders)
-        $table = $wpdb->prefix . 'wc_order_product_lookup';
-
-        $query = "
-			SELECT DISTINCT order_id
-			FROM $table
-			WHERE order_id IN ( $order_id_list )
-			AND product_id IN ( $product_id_list )
-		";
-
-        return $wpdb->get_col($query);
+        // Note: In HPOS mode, order items are still stored in the traditional tables
+        // Only the main order data moved to wc_orders table
+        return $wpdb->get_col(
+            "SELECT DISTINCT order_id
+			FROM {$wpdb->prefix}woocommerce_order_items items
+			LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta im ON items.order_item_id = im.order_item_id
+			WHERE items.order_id IN ( {$order_id_list} )
+			AND items.order_item_type = 'line_item'
+			AND im.meta_key IN ( '_product_id', '_variation_id' )
+			AND im.meta_value IN ( {$product_id_list} )
+		"
+        );
     }
 
 
@@ -288,16 +287,16 @@ class WC_Search_Orders_By_Product_Admin
         $order_id_list   = self::get_sanitized_id_list($order_ids);
         $product_cat_ids = self::get_sanitized_id_list($product_categories);
 
-        $lookup_table             = $wpdb->prefix . 'wc_order_product_lookup';
-        $term_relationships_table = $wpdb->prefix . 'term_relationships';
-        $term_taxonomy_table      = $wpdb->prefix . 'term_taxonomy';
-
+        // Note: In HPOS mode, order items are still stored in the traditional tables
         $sql = "
-			SELECT DISTINCT opl.order_id
-			FROM {$lookup_table} AS opl
-			INNER JOIN {$term_relationships_table} AS tr ON opl.product_id = tr.object_id
-			INNER JOIN {$term_taxonomy_table} AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-			WHERE opl.order_id IN ( {$order_id_list} )
+			SELECT DISTINCT order_id
+			FROM {$wpdb->prefix}woocommerce_order_items items
+			LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta im ON items.order_item_id = im.order_item_id
+			LEFT JOIN {$wpdb->prefix}term_relationships tr ON im.meta_value = tr.object_id
+			LEFT JOIN {$wpdb->prefix}term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+			WHERE items.order_id IN ( {$order_id_list} )
+			AND items.order_item_type = 'line_item'
+			AND im.meta_key = '_product_id'
 			AND tt.taxonomy = 'product_cat'
 			AND tt.term_id IN ( {$product_cat_ids} )
 		";
@@ -313,24 +312,27 @@ class WC_Search_Orders_By_Product_Admin
         global $wpdb;
 
         $product_type_order_ids = $wpdb->get_col(
-            "
-            SELECT DISTINCT o.ID
-            FROM {$wpdb->prefix}posts o
-            INNER JOIN {$wpdb->prefix}woocommerce_order_items oi
-                ON oi.order_id = o.ID
-            INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim
-                ON oi.order_item_id = oim.order_item_id
-            INNER JOIN {$wpdb->prefix}term_relationships tr
-                ON oim.meta_value = tr.object_id
-            INNER JOIN {$wpdb->prefix}term_taxonomy tt
-                ON tr.term_taxonomy_id = tt.term_taxonomy_id
-            INNER JOIN {$wpdb->prefix}terms t
-                ON tt.term_id = t.term_id
-            WHERE o.post_type = 'shop_order'
-            AND oim.meta_key = '_product_id'
-            AND tt.taxonomy = 'product_type'
-            AND t.name = '{$product_type}'
-        "
+            $wpdb->prepare(
+                "
+                SELECT DISTINCT o.ID
+                FROM {$wpdb->prefix}posts o
+                INNER JOIN {$wpdb->prefix}woocommerce_order_items oi
+                    ON oi.order_id = o.ID
+                INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim
+                    ON oi.order_item_id = oim.order_item_id
+                INNER JOIN {$wpdb->prefix}term_relationships tr
+                    ON oim.meta_value = tr.object_id
+                INNER JOIN {$wpdb->prefix}term_taxonomy tt
+                    ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                INNER JOIN {$wpdb->prefix}terms t
+                    ON tt.term_id = t.term_id
+                WHERE o.post_type = 'shop_order'
+                AND oim.meta_key = '_product_id'
+                AND tt.taxonomy = 'product_type'
+                AND t.name = %s
+            ",
+                $product_type
+            )
         );
 
         return $product_type_order_ids;
@@ -349,25 +351,29 @@ class WC_Search_Orders_By_Product_Admin
 
         $order_table = OrdersTableDataStore::get_orders_table_name();
 
+        // Note: In HPOS mode, order items are still stored in the traditional tables
         $product_type_order_ids = $wpdb->get_col(
-            "
-            SELECT DISTINCT o.id
-            FROM {$order_table} o
-            INNER JOIN {$wpdb->prefix}woocommerce_order_items oi
-                ON oi.order_id = o.id
-            INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim
-                ON oi.order_item_id = oim.order_item_id
-            INNER JOIN {$wpdb->prefix}term_relationships tr
-                ON oim.meta_value = tr.object_id
-            INNER JOIN {$wpdb->prefix}term_taxonomy tt
-                ON tr.term_taxonomy_id = tt.term_taxonomy_id
-            INNER JOIN {$wpdb->prefix}terms t
-                ON tt.term_id = t.term_id
-            WHERE o.type = 'shop_order'
-            AND oim.meta_key = '_product_id'
-            AND tt.taxonomy = 'product_type'
-            AND t.name = '{$product_type}'
-        "
+            $wpdb->prepare(
+                "
+                SELECT DISTINCT o.id
+                FROM {$order_table} o
+                INNER JOIN {$wpdb->prefix}woocommerce_order_items oi
+                    ON oi.order_id = o.id
+                INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim
+                    ON oi.order_item_id = oim.order_item_id
+                INNER JOIN {$wpdb->prefix}term_relationships tr
+                    ON oim.meta_value = tr.object_id
+                INNER JOIN {$wpdb->prefix}term_taxonomy tt
+                    ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                INNER JOIN {$wpdb->prefix}terms t
+                    ON tt.term_id = t.term_id
+                WHERE o.type = 'shop_order'
+                AND oim.meta_key = '_product_id'
+                AND tt.taxonomy = 'product_type'
+                AND t.name = %s
+            ",
+                $product_type
+            )
         );
 
         return $product_type_order_ids;
@@ -393,15 +399,15 @@ class WC_Search_Orders_By_Product_Admin
 
             // filter order IDs based on additional filtering criteria (products, product categories and product type).
             if (! empty($_GET['search_product_type'])) {
-                $order_ids = self::order_ids_by_product_type($_GET['search_product_type']);
+                $order_ids = self::order_ids_by_product_type(sanitize_text_field(wp_unslash($_GET['search_product_type'])));
             }
 
             if (! empty($order_ids) && ! empty($_GET['product_id'])) {
-                $order_ids = self::filter_orders_containing_products($order_ids, $_GET['product_id']);
+                $order_ids = self::filter_orders_containing_products($order_ids, sanitize_text_field(wp_unslash($_GET['product_id'])));
             }
 
             if (! empty($order_ids) && ! empty($_GET['search_product_cat'])) {
-                $order_ids = self::filter_orders_containing_product_categories($order_ids, $_GET['search_product_cat']);
+                $order_ids = self::filter_orders_containing_product_categories($order_ids, sanitize_text_field(wp_unslash($_GET['search_product_cat'])));
             }
 
             if (empty($order_ids)) {
@@ -424,15 +430,15 @@ class WC_Search_Orders_By_Product_Admin
         $order_ids = self::get_order_ids_hpos();
 
         if (! empty($_GET['search_product_type'])) {
-            $order_ids = self::order_ids_by_product_type_hpos($_GET['search_product_type']);
+            $order_ids = self::order_ids_by_product_type_hpos(sanitize_text_field(wp_unslash($_GET['search_product_type'])));
         }
 
         if (! empty($order_ids) && ! empty($_GET['product_id'])) {
-            $order_ids = self::filter_orders_containing_products($order_ids, $_GET['product_id']);
+            $order_ids = self::filter_orders_containing_products_hpos($order_ids, sanitize_text_field(wp_unslash($_GET['product_id'])));
         }
 
         if (! empty($order_ids) && ! empty($_GET['search_product_cat'])) {
-            $order_ids = self::filter_orders_containing_product_categories($order_ids, $_GET['search_product_cat']);
+            $order_ids = self::filter_orders_containing_product_categories_hpos($order_ids, sanitize_text_field(wp_unslash($_GET['search_product_cat'])));
         }
 
         if (empty($order_ids)) {
