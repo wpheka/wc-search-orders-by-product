@@ -54,7 +54,7 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Ajax', false ) ) :
 		public function action_save_sobp_deactivation_popup_data() {
 
 			$plugin_token = str_replace( '-', '_', wc_search_orders_by_product()->text_domain );
-			if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( $_POST['_wpnonce'], $plugin_token . 'deactivate_feedback_nonce' ) ) {
+			if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), $plugin_token . 'deactivate_feedback_nonce' ) ) {
 				wp_send_json_error();
 			}
 

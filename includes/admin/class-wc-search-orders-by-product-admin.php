@@ -46,7 +46,7 @@ class WC_Search_Orders_By_Product_Admin
     public static function plugin_action_links($links)
     {
         $action_links = array(
-            'settings' => '<a href="' . admin_url('admin.php?page=wc-search-orders-by-product-settings') . '" aria-label="' . esc_attr__('View plugin settings', wc_search_orders_by_product()->text_domain) . '">' . esc_html__('Settings', wc_search_orders_by_product()->text_domain) . '</a>',
+            'settings' => '<a href="' . admin_url('admin.php?page=wc-search-orders-by-product-settings') . '" aria-label="' . esc_attr__('View plugin settings', 'wc-search-orders-by-product') . '">' . esc_html__('Settings', 'wc-search-orders-by-product') . '</a>',
         );
 
         return array_merge($action_links, $links);
@@ -171,12 +171,17 @@ class WC_Search_Orders_By_Product_Admin
         $statuses_sql = implode("','", array_map('esc_sql', $statuses));
         $order_table    = OrdersTableDataStore::get_orders_table_name();
 
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        // $statuses_sql is esc_sql()ed above and $order_table comes from
+        // WooCommerce's own data store. Neither an IN list nor a table
+        // identifier can be a prepare() placeholder.
         $sql = "SELECT id 
 		FROM {$order_table}
         WHERE type = 'shop_order'
 		AND status IN ('{$statuses_sql}')";
 
         return $wpdb->get_col($sql);
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
     }
 
     /**
@@ -221,7 +226,10 @@ class WC_Search_Orders_By_Product_Admin
         }
 
         // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Variables are sanitized via get_sanitized_id_list
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- lists are absint()ed by get_sanitized_id_list().
+        // Every id in these lists is absint()ed by get_sanitized_id_list(),
+        // and an IN list cannot be a prepare() placeholder. A phpcs:ignore
+        // applies only to the following line, so the interpolations inside
+        // the string need a disable/enable pair instead.
         return $wpdb->get_col(
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
@@ -262,7 +270,11 @@ class WC_Search_Orders_By_Product_Admin
 
         // Note: In HPOS mode, order items are still stored in the traditional tables
         // Only the main order data moved to wc_orders table
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- lists are absint()ed by get_sanitized_id_list().
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        // Every id in these lists is absint()ed by get_sanitized_id_list(),
+        // and an IN list cannot be a prepare() placeholder. A phpcs:ignore
+        // applies only to the following line, so the interpolations inside
+        // the string need a disable/enable pair instead.
         return $wpdb->get_col(
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
@@ -273,6 +285,7 @@ class WC_Search_Orders_By_Product_Admin
 			AND im.meta_value IN ( {$product_id_list} )
 		"
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
     }
 
 
@@ -303,7 +316,11 @@ class WC_Search_Orders_By_Product_Admin
             return array();
         }
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- lists are absint()ed by get_sanitized_id_list().
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        // Every id in these lists is absint()ed by get_sanitized_id_list(),
+        // and an IN list cannot be a prepare() placeholder. A phpcs:ignore
+        // applies only to the following line, so the interpolations inside
+        // the string need a disable/enable pair instead.
         return $wpdb->get_col(
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
@@ -317,6 +334,7 @@ class WC_Search_Orders_By_Product_Admin
 			AND tt.term_id IN ( {$product_cat_list} )
 		"
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
     }
 
     /**
@@ -345,6 +363,9 @@ class WC_Search_Orders_By_Product_Admin
         }
 
         // Note: In HPOS mode, order items are still stored in the traditional tables
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        // Both id lists are absint()ed by get_sanitized_id_list(); an IN list
+        // cannot be a prepare() placeholder.
         $sql = "
 			SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
@@ -359,6 +380,7 @@ class WC_Search_Orders_By_Product_Admin
 		";
 
         return $wpdb->get_col($sql);
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
     }
 
     /**
@@ -409,6 +431,9 @@ class WC_Search_Orders_By_Product_Admin
         $order_table = OrdersTableDataStore::get_orders_table_name();
 
         // Note: In HPOS mode, order items are still stored in the traditional tables
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        // The values here are prepared. $order_table is WooCommerce's own
+        // orders table name, and a table identifier cannot be a placeholder.
         $product_type_order_ids = $wpdb->get_col(
             $wpdb->prepare(
                 "
@@ -432,6 +457,7 @@ class WC_Search_Orders_By_Product_Admin
                 $product_type
             )
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
 
         return $product_type_order_ids;
     }
@@ -455,6 +481,11 @@ class WC_Search_Orders_By_Product_Admin
             $order_ids = self::get_order_ids();
 
             // filter order IDs based on additional filtering criteria (products, product categories and product type).
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended
+            // These are the admin order-list filter values. The screen is
+            // reached by following a GET link, so there is no nonce to verify,
+            // and nothing here changes state -- the values only narrow a query.
+            // Each is unslashed and sanitized at the point of use.
             if (! empty($_GET['search_product_type'])) {
                 $order_ids = self::order_ids_by_product_type(sanitize_text_field(wp_unslash($_GET['search_product_type'])));
             }
@@ -466,6 +497,8 @@ class WC_Search_Orders_By_Product_Admin
             if (! empty($order_ids) && ! empty($_GET['search_product_cat'])) {
                 $order_ids = self::filter_orders_containing_product_categories($order_ids, sanitize_text_field(wp_unslash($_GET['search_product_cat'])));
             }
+
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
             if (empty($order_ids)) {
                 $query_vars['post__in'] = array( 0 );
@@ -480,6 +513,9 @@ class WC_Search_Orders_By_Product_Admin
 
     function sobp_filter_orders_hpos($order_data, $query, $sql)
     {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
+        // Same as sobp_filter_orders above: admin order-list filter values,
+        // arrived at by a GET link, narrowing a query and changing nothing.
         if (empty($_GET['search_product_type']) && empty($_GET['product_id']) && empty($_GET['search_product_cat'])) {
             return $order_data; // Let WooCommerce run the default query
         }
@@ -497,6 +533,8 @@ class WC_Search_Orders_By_Product_Admin
         if (! empty($order_ids) && ! empty($_GET['search_product_cat'])) {
             $order_ids = self::filter_orders_containing_product_categories_hpos($order_ids, sanitize_text_field(wp_unslash($_GET['search_product_cat'])));
         }
+
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
         if (empty($order_ids)) {
             return array( [], null, null );

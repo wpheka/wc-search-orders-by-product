@@ -186,7 +186,7 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 
 		?>
 
-		<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>" id="<?php echo $deactivation_modal_id; ?>">
+		<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>" id="<?php echo esc_attr( $deactivation_modal_id ); ?>">
 			<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-wrap">
 				<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-header">
 					<h3><?php echo esc_html__( 'If you have a moment, please let us know why you are deactivating:', 'wc-search-orders-by-product' ); ?></h3>
@@ -271,10 +271,10 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 		<script type="text/javascript">
 			(function($) {
 				$(function() {
-					var modal = $( '#<?php echo $deactivation_modal_id; ?>' );
+					var modal = $( '#<?php echo esc_js( $deactivation_modal_id ); ?>' );
 					var deactivateLink = '';
 
-					$( '#the-list' ).on('click', 'a.<?php echo self::$tracker_id; ?>-deactivate-link', function(e) {
+					$( '#the-list' ).on('click', 'a.<?php echo esc_js( self::$tracker_id ); ?>-deactivate-link', function(e) {
 						e.preventDefault();
 
 						modal.addClass('modal-active');

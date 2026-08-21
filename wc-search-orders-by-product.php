@@ -142,6 +142,15 @@ function wc_search_orders_by_product_declare_hpos_compatibility()
         return;
     }
 
-    \WPHEKA\Framework\V1\WooCommerce\Compatibility::declare_for(WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_FILE);
+    /*
+     * HPOS only, which is exactly what this plugin declared before adoption.
+     * The adapter's default declares Blocks compatibility too, and nobody has
+     * verified this plugin against block checkout -- claiming it would replace
+     * WooCommerce's "uncertain" listing with an assertion no one made.
+     */
+    \WPHEKA\Framework\V1\WooCommerce\Compatibility::declare_for(
+        WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_FILE,
+        array( \WPHEKA\Framework\V1\WooCommerce\Compatibility::HPOS )
+    );
 }
 add_action('plugins_loaded', 'wc_search_orders_by_product_declare_hpos_compatibility');

@@ -117,8 +117,8 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 			?>
 			<div class="wrap">
 				<div class='wpheka-page-bar'>
-					<img class='logo' src='<?php echo $WC_Search_Orders_By_Product->plugin_url . 'assets/admin/images/control-panel-icon.png'; ?>' height='32px'>
-					<h3><?php esc_html_e( 'WC Search Orders By Product', wc_search_orders_by_product()->text_domain ); ?></h3>
+					<img class='logo' src='<?php echo esc_url( $WC_Search_Orders_By_Product->plugin_url . 'assets/admin/images/control-panel-icon.png' ); ?>' height='32px'>
+					<h3><?php esc_html_e( 'WC Search Orders By Product', 'wc-search-orders-by-product' ); ?></h3>
 				</div>
 				<hr class="wp-header-end" />
 				<div class='wpheka-page-wrapper'>
@@ -131,11 +131,11 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 					<div class='wpheka-main-content'>
 						<div class='wpheka-box'>
 							<div class='wpheka-box-title-bar'>
-								<h3><?php esc_html_e( 'Settings', wc_search_orders_by_product()->text_domain ); ?></h3>
+								<h3><?php esc_html_e( 'Settings', 'wc-search-orders-by-product' ); ?></h3>
 							</div>
 							<div class='wpheka-box-content'>
 								<div class='content mb22'>
-									<p><?php esc_html_e( 'This WooCommerce extension automatically adds product search, product type and product category filter dropdown in WooCommerce Orders screen. You can find orders by typing just a few characters of your product name. As you start typing in the search input, you will see instant results popping up inside the dropdown menu. The auto listing of the matching products with same characters inside the dropdown will help you in typo tolerance or if you misspell the product name.', wc_search_orders_by_product()->text_domain ); ?>
+									<p><?php esc_html_e( 'This WooCommerce extension automatically adds product search, product type and product category filter dropdown in WooCommerce Orders screen. You can find orders by typing just a few characters of your product name. As you start typing in the search input, you will see instant results popping up inside the dropdown menu. The auto listing of the matching products with same characters inside the dropdown will help you in typo tolerance or if you misspell the product name.', 'wc-search-orders-by-product' ); ?>
 									</p>
 								</div>
 								<?php require plugin_dir_path( WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_FILE ) . 'templates/admin/settings/settings-form.php'; ?>
@@ -165,7 +165,7 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 				console.log(jQuery('#plugin-settings-form').serialize());  
 
 				jQuery.ajax({
-					url: "<?php echo $ajax_action; ?>",
+					url: "<?php echo esc_url( $ajax_action ); ?>",
 					type: 'post',
 					cache: false,
 					processData: false,
