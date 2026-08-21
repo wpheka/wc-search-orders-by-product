@@ -555,13 +555,11 @@ class WC_Search_Orders_By_Product_Admin
      */
     public function is_sobp_search_settings_active($option)
     {
-        $settings = get_option('sobp_settings');
+        $settings = wc_search_orders_by_product_options()->all();
 
-        if (empty($settings)) {
-            return false;
-        }
-
-        return $settings[ $option ];
+        // Was `return $settings[ $option ]`, which warned on a missing key and
+        // returned an int despite the documented boolean.
+        return ! empty($settings[ $option ]);
     }
 }
 

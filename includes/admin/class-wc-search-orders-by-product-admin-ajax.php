@@ -41,7 +41,7 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Ajax', false ) ) :
 			'search_orders_by_product_category' => isset( $_POST['search_orders_by_product_category'] ) ? absint( $_POST['search_orders_by_product_category'] ) : 0,
 		);
 
-		update_option( 'sobp_settings', $settings );
+		wc_search_orders_by_product_options()->update( $settings );
 			wp_send_json_success();
 			wp_die();
 		}

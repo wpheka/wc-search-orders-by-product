@@ -81,10 +81,21 @@ function wc_search_orders_by_product_options()
     static $options = null;
 
     if (null === $options) {
-        $options = \WPHEKA\Framework\V1\Core\Options::for_plugin(
+        /*
+         * Explicit per-site scope rather than for_plugin(). This option is also
+         * written by the Settings API -- register_setting( 'sobp_search_options',
+         * 'sobp_settings', ... ) -- and options.php always writes per-site. If
+         * for_plugin() resolved network scope on a network activation, reads and
+         * the Settings API would use different rows and the settings would read
+         * back empty with nothing reporting why.
+         *
+         * Per-site is also correct on its own terms: these toggles govern the
+         * per-site order list screen.
+         */
+        $options = new \WPHEKA\Framework\V1\Core\Options(
             'sobp_settings',
             array(),
-            plugin_basename(WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_FILE)
+            \WPHEKA\Framework\V1\Core\Options::SCOPE_SITE
         );
     }
 
