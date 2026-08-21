@@ -71,9 +71,17 @@ class WC_Search_Orders_By_Product_Admin
     {
         global $WC_Search_Orders_By_Product;
 
+        /*
+         * Every $_GET read in this method renders the current filter state on
+         * the orders list screen. None of them change anything, so a nonce would
+         * protect nothing -- WooCommerce's own order filters read their values
+         * the same way. Each is still sanitised on the way in.
+         */
         $product_name = '';
         $product_id = '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- filter display, no state change.
         if (! empty($_GET['product_id'])) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- filter display, no state change.
             $product_id = absint($_GET['product_id']);
             $product = wc_get_product($product_id);
             if ($product) {
@@ -81,18 +89,20 @@ class WC_Search_Orders_By_Product_Admin
             }
         }
         ?>
-        <select class="wc-product-search" id="product_id" name="product_id" data-placeholder="<?php esc_attr_e('Search for a product&hellip;', $WC_Search_Orders_By_Product->text_domain); ?>" data-allow_clear="true">
-            <option value="<?php echo esc_attr($product_id); ?>" selected="selected"><?php echo htmlspecialchars(wp_kses_post($product_name)); // htmlspecialchars to prevent XSS when rendered by selectWoo. ?></option>
+        <select class="wc-product-search" id="product_id" name="product_id" data-placeholder="<?php esc_attr_e('Search for a product&hellip;', 'wc-search-orders-by-product'); ?>" data-allow_clear="true">
+            <option value="<?php echo esc_attr($product_id); ?>" selected="selected"><?php echo esc_html($product_name); // Encoded, not filtered: selectWoo renders this as HTML. ?></option>
         </select>
         <?php
         // Product type filtering.
         if ($this->is_sobp_search_settings_active('search_orders_by_product_type')) {?>
             <select name="search_product_type" id="dropdown_product_type">
-                <option value=""><?php esc_attr_e('Filter by product types', $WC_Search_Orders_By_Product->text_domain); ?></option>
+                <option value=""><?php esc_html_e('Filter by product types', 'wc-search-orders-by-product'); ?></option>
                 <?php foreach (wc_get_product_types() as $value => $label) { ?>
-                    <option value="<?php echo esc_attr($value); ?>" <?php if (isset($_GET['search_product_type'])) {
-                        echo selected($_GET['search_product_type'], $value, false);
-                                   } ?>><?php echo esc_html($label); ?></option>
+                    <?php
+                    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- filter display, no state change.
+                    $selected_type = isset($_GET['search_product_type']) ? sanitize_text_field(wp_unslash($_GET['search_product_type'])) : '';
+                    ?>
+                    <option value="<?php echo esc_attr($value); ?>" <?php echo selected($selected_type, $value, false); ?>><?php echo esc_html($label); ?></option>
                 <?php } ?>
             </select>
         <?php }
@@ -106,10 +116,14 @@ class WC_Search_Orders_By_Product_Admin
             }
             ?>
             <select name='search_product_cat' class='dropdown_product_cat'>
-                <option value=""><?php echo esc_html__('Filter by product category', $WC_Search_Orders_By_Product->text_domain); ?></option>
+                <option value=""><?php echo esc_html__('Filter by product category', 'wc-search-orders-by-product'); ?></option>
                 <?php if (! empty($product_categories)) : ?>
                     <?php foreach ($product_categories as $cat_id => $cat_name) : ?>
-                        <option value="<?php echo esc_attr($cat_id); ?>" <?php echo isset($_GET['search_product_cat']) ? selected($cat_id, absint($_GET['search_product_cat']), false) : ''; ?>>
+                        <?php
+                        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- filter display, no state change.
+                        $selected_cat = isset($_GET['search_product_cat']) ? absint($_GET['search_product_cat']) : 0;
+                        ?>
+                        <option value="<?php echo esc_attr($cat_id); ?>" <?php echo selected($cat_id, $selected_cat, false); ?>>
                             <?php echo esc_html($cat_name); ?>
                         </option>
                     <?php endforeach; ?>
@@ -196,7 +210,18 @@ class WC_Search_Orders_By_Product_Admin
         $order_id_list   = self::get_sanitized_id_list($order_ids);
         $product_id_list = self::get_sanitized_id_list($product_ids);
 
+        /*
+         * An empty list would render as `IN ( )`, which is a MySQL syntax error
+         * rather than a query matching nothing -- verified against the database.
+         * $order_ids arrives from an earlier query, so a store with no matching
+         * orders reaches here legitimately.
+         */
+        if ('' === $order_id_list || '' === $product_id_list) {
+            return array();
+        }
+
         // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Variables are sanitized via get_sanitized_id_list
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- lists are absint()ed by get_sanitized_id_list().
         return $wpdb->get_col(
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
@@ -225,8 +250,19 @@ class WC_Search_Orders_By_Product_Admin
         $order_id_list   = self::get_sanitized_id_list($order_ids);
         $product_id_list = self::get_sanitized_id_list($product_ids);
 
+        /*
+         * An empty list would render as `IN ( )`, which is a MySQL syntax error
+         * rather than a query matching nothing -- verified against the database.
+         * $order_ids arrives from an earlier query, so a store with no matching
+         * orders reaches here legitimately.
+         */
+        if ('' === $order_id_list || '' === $product_id_list) {
+            return array();
+        }
+
         // Note: In HPOS mode, order items are still stored in the traditional tables
         // Only the main order data moved to wc_orders table
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- lists are absint()ed by get_sanitized_id_list().
         return $wpdb->get_col(
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
@@ -257,6 +293,17 @@ class WC_Search_Orders_By_Product_Admin
         $order_id_list    = self::get_sanitized_id_list($order_ids);
         $product_cat_list = self::get_sanitized_id_list($product_categories);
 
+        /*
+         * An empty list would render as `IN ( )`, which is a MySQL syntax error
+         * rather than a query matching nothing -- verified against the database.
+         * $order_ids arrives from an earlier query, so a store with no matching
+         * orders reaches here legitimately.
+         */
+        if ('' === $order_id_list || '' === $product_cat_list) {
+            return array();
+        }
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- lists are absint()ed by get_sanitized_id_list().
         return $wpdb->get_col(
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
@@ -286,6 +333,16 @@ class WC_Search_Orders_By_Product_Admin
 
         $order_id_list   = self::get_sanitized_id_list($order_ids);
         $product_cat_ids = self::get_sanitized_id_list($product_categories);
+
+        /*
+         * An empty list would render as `IN ( )`, which is a MySQL syntax error
+         * rather than a query matching nothing -- verified against the database.
+         * $order_ids arrives from an earlier query, so a store with no matching
+         * orders reaches here legitimately.
+         */
+        if ('' === $order_id_list || '' === $product_cat_ids) {
+            return array();
+        }
 
         // Note: In HPOS mode, order items are still stored in the traditional tables
         $sql = "

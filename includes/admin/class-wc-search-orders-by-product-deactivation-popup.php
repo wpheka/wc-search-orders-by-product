@@ -48,6 +48,22 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 	 */
 	public static function send_tracking_deactivation() {
 
+		/*
+		 * Neither of these existed. wp_ajax_ only requires a logged-in user, so
+		 * any subscriber could make this site POST arbitrary feedback -- domain
+		 * and licence-key fields included -- to the vendor endpoint, and any
+		 * page could trigger it against an administrator by CSRF.
+		 *
+		 * activate_plugins is the right gate: this fires from the plugin
+		 * deactivation flow, so anyone legitimately reaching it can already
+		 * deactivate plugins.
+		 */
+		check_ajax_referer( 'wpheka_sobp_deactivation', 'security' );
+
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			wp_send_json_error( array( 'error' => __( 'You do not have permission to do that.', 'wc-search-orders-by-product' ) ), 403 );
+		}
+
 		if ( empty( $_POST['deactivation_domain'] ) ) {
 			wp_send_json_error( array( 'error' => __( 'Something went wrong. Please try again later.', 'wc-search-orders-by-product' ) ) );
 			wp_die( -1 );
@@ -58,7 +74,7 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 		$deactivation_domain = isset( $_POST['deactivation_domain'] ) ? sanitize_text_field( wp_unslash( $_POST['deactivation_domain'] ) ) : '';
 		$deactivation_license_key = isset( $_POST['deactivation_license_key'] ) ? sanitize_text_field( wp_unslash( $_POST['deactivation_license_key'] ) ) : '';
 
-		$email = isset( $_POST['deactivation_email'] ) ? filter_var( $_POST['deactivation_email'], FILTER_SANITIZE_EMAIL ) : '';
+		$email = isset( $_POST['deactivation_email'] ) ? sanitize_email( wp_unslash( $_POST['deactivation_email'] ) ) : '';
 
 		$reason_id = isset( $_POST['reason_id'] ) ? sanitize_text_field( wp_unslash( $_POST['reason_id'] ) ) : '';
 		$reason_info = isset( $_POST['reason_info'] ) ? sanitize_text_field( wp_unslash( $_POST['reason_info'] ) ) : '';
@@ -173,7 +189,7 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 		<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>" id="<?php echo $deactivation_modal_id; ?>">
 			<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-wrap">
 				<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-header">
-					<h3><?php echo esc_html( 'If you have a moment, please let us know why you are deactivating:', 'wc-search-orders-by-product' ); ?></h3>
+					<h3><?php echo esc_html__( 'If you have a moment, please let us know why you are deactivating:', 'wc-search-orders-by-product' ); ?></h3>
 				</div>
 
 				<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-body">
@@ -192,15 +208,15 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 				</div>
 
 				<div class="<?php echo esc_attr( self::$deactivation_modal ); ?>-footer">
-					<a href="#" class="dont-bother-me"><?php echo esc_html( 'I rather wouldn\'t say', 'wc-search-orders-by-product' ); ?></a>
-					<button class="button-secondary"><?php echo esc_html( 'Submit & Deactivate', 'wc-search-orders-by-product' ); ?></button>
-					<button class="button-primary"><?php echo esc_html( 'Cancel', 'wc-search-orders-by-product' ); ?></button>
+					<a href="#" class="dont-bother-me"><?php echo esc_html__( 'I rather wouldn\'t say', 'wc-search-orders-by-product' ); ?></a>
+					<button class="button-secondary"><?php echo esc_html__( 'Submit & Deactivate', 'wc-search-orders-by-product' ); ?></button>
+					<button class="button-primary"><?php echo esc_html__( 'Cancel', 'wc-search-orders-by-product' ); ?></button>
 				</div>
 			</div>
 		</div>
 
 		<style type="text/css">
-			<?php echo $deactivation_modal_class; ?> {
+			<?php echo esc_html( $deactivation_modal_class ); ?> {
 				position: fixed;
 				z-index: 99999;
 				top: 0;
@@ -211,41 +227,41 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 				display: none;
 			}
 
-			<?php echo $deactivation_modal_class; ?>.modal-active {
+			<?php echo esc_html( $deactivation_modal_class ); ?>.modal-active {
 				display: block;
 			}
 
-			<?php echo $deactivation_modal_class; ?>-wrap {
+			<?php echo esc_html( $deactivation_modal_class ); ?>-wrap {
 				width: 475px;
 				position: relative;
 				margin: 10% auto;
 				background: #fff;
 			}
 
-			<?php echo $deactivation_modal_class; ?>-header {
+			<?php echo esc_html( $deactivation_modal_class ); ?>-header {
 				border-bottom: 1px solid #eee;
 				padding: 8px 20px;
 			}
 
-			<?php echo $deactivation_modal_class; ?>-header h3 {
+			<?php echo esc_html( $deactivation_modal_class ); ?>-header h3 {
 				line-height: 150%;
 				margin: 0;
 			}
 
-			<?php echo $deactivation_modal_class; ?>-body {
+			<?php echo esc_html( $deactivation_modal_class ); ?>-body {
 				padding: 5px 20px 20px 20px;
 			}
 
-			<?php echo $deactivation_modal_class; ?>-body .reason-input {
+			<?php echo esc_html( $deactivation_modal_class ); ?>-body .reason-input {
 				margin-top: 5px;
 				margin-left: 20px;
 			}
 
-			<?php echo $deactivation_modal_class; ?>-body textarea, <?php echo $deactivation_modal_class; ?>-body input[type="text"]{
+			<?php echo esc_html( $deactivation_modal_class ); ?>-body textarea, <?php echo esc_html( $deactivation_modal_class ); ?>-body input[type="text"]{
 				width: 100%;
 			}
 
-			<?php echo $deactivation_modal_class; ?>-footer {
+			<?php echo esc_html( $deactivation_modal_class ); ?>-footer {
 				border-top: 1px solid #eee;
 				padding: 12px 20px;
 				text-align: right;
@@ -310,6 +326,7 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 							type: 'POST',
 							data: {
 								action: 'wpheka_sobp_submit_deactivation',
+								security: '<?php echo esc_js( wp_create_nonce( 'wpheka_sobp_deactivation' ) ); ?>',
 								reason_id: ( 0 === $radio.length ) ? 'none' : $radio.val(),
 								reason_info: ( 0 !== $input.length ) ? $input.val().trim() : '',
 								deactivation_domain: ( 0 !== $deactivation_domain.length ) ? $deactivation_domain.val().trim() : '',
