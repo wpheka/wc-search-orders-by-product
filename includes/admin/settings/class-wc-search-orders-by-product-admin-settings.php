@@ -58,22 +58,47 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 		 * Add menu items.
 		 */
 		public function sobp_search_settings_menu() {
-			global $admin_page_hooks, $WC_Search_Orders_By_Product;
+			global $WC_Search_Orders_By_Product;
 
-			if ( ! isset( $admin_page_hooks['wpheka_plugin_panel'] ) ) {
-				$position   = apply_filters( 'wpheka_plugins_menu_item_position', '55.5' );
-				$capability = apply_filters( 'wpheka_plugin_panel_menu_page_capability', 'manage_options' );
-				$show       = apply_filters( 'wpheka_plugin_panel_menu_page_show', true );
-
-				// WPHEKA text must not be translated.
-				if ( ! ! $show ) {
-					add_menu_page( 'wpheka_plugin_panel', 'WPHEKA', $capability, 'wpheka_plugin_panel', null, $WC_Search_Orders_By_Product->plugin_url . 'assets/admin/images/wp-heka-menu-icon-22.svg', $position );
-				}
+			if ( ! wc_search_orders_by_product_framework_ready() ) {
+				return;
 			}
 
-			add_submenu_page( 'wpheka_plugin_panel', __( 'WC Search Orders By Product', $WC_Search_Orders_By_Product->text_domain ), __( 'WC Search Orders By Product', $WC_Search_Orders_By_Product->text_domain ), 'manage_woocommerce', 'wc-search-orders-by-product-settings', array( $this, 'sobp_search_settings_page' ) );
-			/* === Duplicate Items Hack === */
-			remove_submenu_page( 'wpheka_plugin_panel', 'wpheka_plugin_panel' );
+			/*
+			 * The shared WPHEKA parent is coordinated by the framework (ADR-028),
+			 * which also removes the parent's mirrored submenu -- the "Duplicate
+			 * Items Hack" that used to sit at the end of this method.
+			 *
+			 * `manage_woocommerce` is passed explicitly rather than inherited,
+			 * because that is what this page has always required and changing who
+			 * can use it is not part of adopting the framework.
+			 *
+			 * **It does not follow that a shop manager can reach this page.** The
+			 * parent requires `manage_options`, which shop managers do not have,
+			 * and WordPress nests submenus inside the parent -- so the whole menu
+			 * is hidden from exactly the role this capability was chosen for. The
+			 * page stays reachable by direct URL, which makes it undiscoverable
+			 * rather than forbidden. Pre-existing, unchanged here, and worth a
+			 * decision: it is fixed either by lowering the shared parent's
+			 * capability, which affects every WPHEKA plugin, or by accepting that
+			 * this page is for administrators.
+			 *
+			 * The literal text domain is deliberate. This previously passed
+			 * `$WC_Search_Orders_By_Product->text_domain`, a variable, and the
+			 * i18n tooling only extracts literals -- so neither string was ever
+			 * in the .pot file and neither could be translated.
+			 */
+			$menu = new \WPHEKA\Framework\V1\Admin\Menu(
+				$WC_Search_Orders_By_Product->plugin_url . 'assets/admin/images/wp-heka-menu-icon-22.svg'
+			);
+
+			$menu->add_page(
+				__( 'WC Search Orders By Product', 'wc-search-orders-by-product' ),
+				__( 'WC Search Orders By Product', 'wc-search-orders-by-product' ),
+				'wc-search-orders-by-product-settings',
+				array( $this, 'sobp_search_settings_page' ),
+				'manage_woocommerce'
+			);
 		}
 
 		/**

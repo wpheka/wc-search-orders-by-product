@@ -27,3 +27,5 @@ project.properties
 .sublimelinterrc
 *.swp
 .phpintel
+# WPHEKA Quality reports
+.wpheka-quality-reports/
