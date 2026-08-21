@@ -8,10 +8,10 @@
  * Version: 3.2
  * Requires at least: 4.8
  * Requires PHP: 8.1
- * Tested up to: 6.9.1
+ * Tested up to: 7.1
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.5.1
+ * WC tested up to: 11.0.1
  * Text Domain: wc-search-orders-by-product
  * Domain Path: /languages
  * License: GPLv3 or later
