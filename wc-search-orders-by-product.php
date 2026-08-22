@@ -6,7 +6,7 @@
  * Author: WPHEKA
  * Author URI: https://www.wpheka.com/
  * Version: 3.2
- * Requires at least: 4.8
+ * Requires at least: 6.5
  * Requires PHP: 8.1
  * Tested up to: 7.1
  * Requires Plugins: woocommerce
