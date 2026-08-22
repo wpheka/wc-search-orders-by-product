@@ -3,7 +3,7 @@ Contributors: akshayaswaroop, wpheka
 Tags: search orders, woocommerce, order, product, filter
 Requires at least: 6.5
 Tested up to: 7.1
-Stable tag: 3.2
+Stable tag: 3.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
@@ -43,6 +43,17 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 2. Plugin settings screen
 
 == Changelog ==
+
+= 3.3 - 2026-08-22 =
+* Security - The deactivation feedback handler required neither a nonce nor a capability. Both are now checked, and the nonce is compared correctly.
+* Security - Escaped remaining admin output, including the settings screen and the deactivation dialog's inline script.
+* Fix - Order filtering no longer produces an SQL error when a filter matches no products.
+* Fix - Fourteen admin strings are translatable again. Twelve passed a variable as their text domain, which translation tools cannot extract, and two had no text domain at all.
+* Fix - The deactivation dialog no longer leaves its button stuck on "Processing" when the request fails. Deactivation proceeds either way.
+* Fix - The settings check returns a boolean and no longer warns when asked about an unknown setting.
+* Enhancement - The settings screen now appears under the shared WPHEKA menu.
+* Enhancement - Adopted the WPHEKA framework for the HPOS declaration, settings storage and the shared menu.
+* Enhancement - Requires PHP 8.1 and WordPress 6.5. WordPress 7.1 and WooCommerce 11.0.1 compatibility added.
 
 = 3.2 - 2026-02-12 =
 * Security - Fixed SQL injection vulnerabilities in product type filtering.
