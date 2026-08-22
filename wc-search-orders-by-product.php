@@ -102,6 +102,53 @@ function wc_search_orders_by_product_options()
     return $options;
 }
 
+/**
+ * Read the settings, with or without a framework.
+ *
+ * The three call sites used get_option() before adoption. Routing them through
+ * the Options accessor without this guard meant that when no usable framework
+ * booted -- which really happens, a stale bundle winning the registry is enough
+ * -- `new Options` fataled on a missing class instead of the screen simply
+ * rendering. Adoption must not make the degraded path worse than the code it
+ * replaced.
+ *
+ * @since 3.3
+ * @return array
+ */
+function wc_search_orders_by_product_settings()
+{
+    if (wc_search_orders_by_product_framework_ready()) {
+        return wc_search_orders_by_product_options()->all();
+    }
+
+    return (array) get_option('sobp_settings', array());
+}
+
+/**
+ * Persist settings, with or without a framework.
+ *
+ * Both paths merge. Options::update() merges by design, and the fallback merges
+ * explicitly rather than calling update_option() with the partial array, so the
+ * two paths cannot disagree about whether an absent key means "unchanged" or
+ * "removed".
+ *
+ * @since 3.3
+ * @param array $settings Settings to merge in.
+ * @return void
+ */
+function wc_search_orders_by_product_save_settings($settings)
+{
+    $settings = (array) $settings;
+
+    if (wc_search_orders_by_product_framework_ready()) {
+        wc_search_orders_by_product_options()->update($settings);
+
+        return;
+    }
+
+    update_option('sobp_settings', array_merge((array) get_option('sobp_settings', array()), $settings));
+}
+
 // Include the main WC_Search_Orders_By_Product class.
 if (!class_exists('WC_Search_Orders_By_Product')) {
     include_once dirname(__FILE__) . '/includes/class-wc-search-orders-by-product.php';
@@ -124,7 +171,11 @@ function wc_search_orders_by_product()
 $GLOBALS['WC_Search_Orders_By_Product'] = wc_search_orders_by_product();
 
 /**
- * Declares support for HPOS and Cart/Checkout Blocks.
+ * Declares support for HPOS.
+ *
+ * Blocks are deliberately not declared: this plugin has no frontend code, so it
+ * makes no claim either way and WooCommerce lists it as uncertain, which is the
+ * truth.
  *
  * Hooked to plugins_loaded, not called at include time. before_woocommerce_init
  * fires from WooCommerce's init at priority 0, so plugins_loaded is early

@@ -106,7 +106,7 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 		 */
 		public function sobp_search_settings_page() {
 			global $WC_Search_Orders_By_Product;
-			$options = wc_search_orders_by_product_options()->all();
+			$options = wc_search_orders_by_product_settings();
 			$ajax_action = add_query_arg(
 				array(
 					'action' => 'save_sobp_plugin_data',

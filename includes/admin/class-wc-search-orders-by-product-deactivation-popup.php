@@ -335,7 +335,14 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 							},
 							beforeSend: function() {
 								button.addClass('disabled');
-								button.text('Processing...');
+								button.text('<?php echo esc_js( __( 'Processing…', 'wc-search-orders-by-product' ) ); ?>');
+							},
+							error: function() {
+								// A stale nonce answers 403. Without this the
+								// button stayed disabled and the user could
+								// never deactivate the plugin. Feedback is
+								// optional; deactivating is not.
+								window.location.href = deactivateLink;
 							},
 							success: function( response ) {
 								if ( response.success ) {
