@@ -76,7 +76,10 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 				return;
 			}
 
-			$reviews = 'https://wordpress.org/support/plugin/wc-search-orders-by-product/reviews/';
+			// rate=5 pre-selects the rating on the review form. Plugin Check reports
+			// this as five_star_reviews_detected; that report is accepted by decision,
+			// so do not "fix" this back to the plain reviews URL.
+			$reviews = 'https://wordpress.org/support/plugin/wc-search-orders-by-product/reviews?rate=5#new-post';
 			$hide    = wp_nonce_url(
 				add_query_arg( 'sobp_hide_review', '1', admin_url( 'index.php' ) ),
 				'sobp_hide_review'
@@ -86,11 +89,10 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 				<p>
 					<?php
 					printf(
-						/* translators: 1: plugin name, 2: opening link tag to the reviews page, 3: closing link tag, 4: opening link tag to dismiss, 5: closing link tag */
-						esc_html__( 'You have been finding orders with %1$s. If it saves you time, %2$sleaving a review%3$s helps other shop owners find it. %4$sDon\'t ask again%5$s.', 'wc-search-orders-by-product' ),
+						/* translators: 1: plugin name, 2: five-star rating link, 3: opening link tag to dismiss, 4: closing link tag */
+						esc_html__( 'You have been finding orders with %1$s. If it saves you time, please leave us a %2$s rating on WordPress.org. %3$sDon\'t ask again%4$s.', 'wc-search-orders-by-product' ),
 						'<strong>' . esc_html__( 'WC Search Orders By Product', 'wc-search-orders-by-product' ) . '</strong>',
-						'<a href="' . esc_url( $reviews ) . '" target="_blank" rel="noopener noreferrer">',
-						'</a>',
+						'<a href="' . esc_url( $reviews ) . '" target="_blank" rel="noopener noreferrer" aria-label="' . esc_attr__( 'five star', 'wc-search-orders-by-product' ) . '">&#9733;&#9733;&#9733;&#9733;&#9733;</a>',
 						'<a href="' . esc_url( $hide ) . '">',
 						'</a>'
 					);
