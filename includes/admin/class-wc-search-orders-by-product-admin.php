@@ -472,6 +472,8 @@ class WC_Search_Orders_By_Product_Admin
     {
         global $typenow;
 
+        self::count_filtered_search();
+
         if (in_array($typenow, wc_get_order_types('order-meta-boxes'), true)) {
             // return $query_vars on trash orders page.
             if (! empty($query_vars['post_status']) && ('trash' == $query_vars['post_status'])) {
@@ -560,6 +562,39 @@ class WC_Search_Orders_By_Product_Admin
         // Was `return $settings[ $option ]`, which warned on a missing key and
         // returned an int despite the documented boolean.
         return ! empty($settings[ $option ]);
+    }
+
+    /**
+     * Count order screens where this plugin actually filtered something.
+     *
+     * Feeds the review prompt's threshold, so the ask follows the plugin having
+     * done its job rather than time having passed.
+     *
+     * Stops writing once the threshold is met, so this costs a handful of option
+     * writes over the life of the install rather than one per order-screen load.
+     *
+     * @since 3.3
+     * @return void
+     */
+    public static function count_filtered_search()
+    {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
+        // The same admin order-list filter values sobp_filter_orders reads.
+        // Only their presence is used, and nothing from them is stored.
+        $filtering = !empty($_GET['search_product_type']) || !empty($_GET['product_id']) || !empty($_GET['search_product_cat']);
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+        if (!$filtering) {
+            return;
+        }
+
+        $count = (int) get_option('sobp_filtered_search_count', 0);
+
+        if ($count >= 3) {
+            return;
+        }
+
+        update_option('sobp_filtered_search_count', $count + 1, false);
     }
 }
 

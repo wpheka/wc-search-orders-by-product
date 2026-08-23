@@ -28,8 +28,8 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 			add_action( 'admin_menu', array( $this, 'sobp_search_settings_menu' ), 20 );
 			add_action( 'admin_enqueue_scripts', array( &$this, 'sobp_enqueue_admin_scripts_styles' ) );
 
-			// Review prompt, on this plugin's own screen only.
-			add_filter( 'admin_footer_text', array( $this, 'sobp_review_prompt' ) );
+			// Review prompt.
+			add_action( 'admin_notices', array( $this, 'sobp_review_prompt' ) );
 			add_action( 'admin_init', array( $this, 'sobp_maybe_hide_review_prompt' ) );
 
 		}
@@ -37,10 +37,10 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 		/**
 		 * Ask for a review in the footer of this plugin's settings screen.
 		 *
-		 * The approach follows WooCommerce's own admin footer prompt -- filter
-		 * admin_footer_text, restrict it to the plugin's screens, and stop asking
-		 * once the user says so. Written here rather than taken from
-		 * WooCommerce, whose licence differs from this project's (ADR-008).
+		 * The approach follows Elementor's rate-us notice -- dashboard only,
+		 * dismissed per user rather than per site, and gated on a usage count
+		 * rather than elapsed time. Written here rather than taken from
+		 * Elementor, whose licence differs from this project's (ADR-008).
 		 *
 		 * **The link goes to the plain reviews page, not a pre-filled five-star
 		 * form.** WooCommerce links to `reviews?rate=5#new-post` and renders five
@@ -53,33 +53,51 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 		 * @param string $footer_text Existing footer text.
 		 * @return string
 		 */
-		public function sobp_review_prompt( $footer_text ) {
+		public function sobp_review_prompt() {
+
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				return;
+			}
 
 			$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 
-			if ( ! $screen || false === strpos( (string) $screen->id, 'wc-search-orders-by-product-settings' ) ) {
-				return $footer_text;
+			if ( ! $screen || 'dashboard' !== $screen->id ) {
+				return;
 			}
 
-			if ( get_option( 'sobp_review_prompt_dismissed' ) ) {
-				return $footer_text;
+			// Per user, so one administrator cannot answer for the rest. The old
+			// site-wide option is still honoured so nobody is asked twice.
+			if ( get_option( 'sobp_review_prompt_dismissed' ) || get_user_meta( get_current_user_id(), 'sobp_review_dismissed', true ) ) {
+				return;
+			}
+
+			// Three filtered searches, not a timer: the plugin having been used.
+			if ( 3 > (int) get_option( 'sobp_filtered_search_count', 0 ) ) {
+				return;
 			}
 
 			$reviews = 'https://wordpress.org/support/plugin/wc-search-orders-by-product/reviews/';
 			$hide    = wp_nonce_url(
-				add_query_arg( 'sobp_hide_review', '1', admin_url( 'admin.php?page=wc-search-orders-by-product-settings' ) ),
+				add_query_arg( 'sobp_hide_review', '1', admin_url( 'index.php' ) ),
 				'sobp_hide_review'
 			);
-
-			return sprintf(
-				/* translators: 1: plugin name, 2: opening link tag to the reviews page, 3: closing link tag, 4: opening link tag to dismiss, 5: closing link tag */
-				esc_html__( 'If %1$s saves you time, a review on WordPress.org helps other shop owners find it. %2$sLeave a review%3$s or %4$sdon\'t ask again%5$s.', 'wc-search-orders-by-product' ),
-				'<strong>' . esc_html__( 'WC Search Orders By Product', 'wc-search-orders-by-product' ) . '</strong>',
-				'<a href="' . esc_url( $reviews ) . '" target="_blank" rel="noopener noreferrer">',
-				'</a>',
-				'<a href="' . esc_url( $hide ) . '">',
-				'</a>'
-			);
+			?>
+			<div class="notice notice-info is-dismissible">
+				<p>
+					<?php
+					printf(
+						/* translators: 1: plugin name, 2: opening link tag to the reviews page, 3: closing link tag, 4: opening link tag to dismiss, 5: closing link tag */
+						esc_html__( 'You have been finding orders with %1$s. If it saves you time, %2$sleaving a review%3$s helps other shop owners find it. %4$sDon\'t ask again%5$s.', 'wc-search-orders-by-product' ),
+						'<strong>' . esc_html__( 'WC Search Orders By Product', 'wc-search-orders-by-product' ) . '</strong>',
+						'<a href="' . esc_url( $reviews ) . '" target="_blank" rel="noopener noreferrer">',
+						'</a>',
+						'<a href="' . esc_url( $hide ) . '">',
+						'</a>'
+					);
+					?>
+				</p>
+			</div>
+			<?php
 		}
 
 		/**
@@ -100,9 +118,9 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 
 			check_admin_referer( 'sobp_hide_review' );
 
-			update_option( 'sobp_review_prompt_dismissed', 1 );
+			update_user_meta( get_current_user_id(), 'sobp_review_dismissed', 1 );
 
-			wp_safe_redirect( admin_url( 'admin.php?page=wc-search-orders-by-product-settings' ) );
+			wp_safe_redirect( admin_url( 'index.php' ) );
 			exit;
 		}
 
