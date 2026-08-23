@@ -45,6 +45,7 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 == Changelog ==
 
 = 3.3 - 2026-08-22 =
+* Feature - Asks for a review on the Dashboard once the plugin has been used, with a link that pre-selects a five-star rating. Shown only after three filtered order searches, dismissed per user rather than for the whole site, and never shown again once dismissed.
 * Security - The deactivation feedback handler required neither a nonce nor a capability. Both are now checked, and the nonce is compared correctly.
 * Security - Escaped remaining admin output, including the settings screen and the deactivation dialog's inline script.
 * Fix - Order filtering no longer produces an SQL error when a filter matches no products.
