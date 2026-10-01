@@ -11,7 +11,7 @@
  * Tested up to: 7.1
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 11.0.1
+ * WC tested up to: 11.1.2
  * Text Domain: wc-search-orders-by-product
  * Domain Path: /languages
  * License: GPLv3 or later

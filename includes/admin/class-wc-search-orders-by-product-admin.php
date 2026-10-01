@@ -32,8 +32,14 @@ class WC_Search_Orders_By_Product_Admin
         add_filter('request', array( &$this, 'sobp_filter_orders' ), PHP_INT_MAX);
 
         // HPOS Hooks
+        // The list table's own query-args filter, not woocommerce_hpos_pre_query.
+        // That one fires for every HPOS order query on the site (My Account,
+        // REST, WooCommerce Subscriptions' subscription lookups) and replaced
+        // its results whenever a filter value was in the URL. This one fires
+        // only for the shop_order admin list, and WooCommerce still applies
+        // the status tab, trash view and pagination on top of the ids we add.
         add_action('woocommerce_order_list_table_restrict_manage_orders', array( &$this, 'display_products_search_dropdown' ));
-        add_filter('woocommerce_hpos_pre_query', array( &$this, 'sobp_filter_orders_hpos'), PHP_INT_MAX, 3);
+        add_filter('woocommerce_shop_order_list_table_prepare_items_query_args', array( &$this, 'sobp_filter_orders_hpos'), PHP_INT_MAX);
     }
 
     /**
@@ -59,17 +65,27 @@ class WC_Search_Orders_By_Product_Admin
     {
         global $typenow;
 
-        if (in_array($typenow, wc_get_order_types('order-meta-boxes'))) {
+        // shop_order only. wc_get_order_types( 'order-meta-boxes' ) also
+        // returns shop_subscription, where every query below (which reads
+        // type 'shop_order') would match nothing.
+        if ('shop_order' === $typenow) {
             $this->display_products_search_dropdown();
         }
     }
 
     /**
      * Display product search dropdown.
+     *
+     * @param string $order_type Order type of the HPOS list table. The legacy
+     *                           screen calls this with no argument.
      */
-    public function display_products_search_dropdown()
+    public function display_products_search_dropdown($order_type = 'shop_order')
     {
         global $WC_Search_Orders_By_Product;
+
+        if ('shop_order' !== $order_type) {
+            return;
+        }
 
         /*
          * Every $_GET read in this method renders the current filter state on
@@ -180,7 +196,7 @@ class WC_Search_Orders_By_Product_Admin
         WHERE type = 'shop_order'
 		AND status IN ('{$statuses_sql}')";
 
-        return $wpdb->get_col($sql);
+        return $wpdb->get_col($sql); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- statuses are esc_sql()ed, table name is WooCommerce's own.
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
     }
 
@@ -230,7 +246,7 @@ class WC_Search_Orders_By_Product_Admin
         // and an IN list cannot be a prepare() placeholder. A phpcs:ignore
         // applies only to the following line, so the interpolations inside
         // the string need a disable/enable pair instead.
-        return $wpdb->get_col(
+        return $wpdb->get_col( // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- both IN lists are absint()ed by get_sanitized_id_list().
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
 			LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta im ON items.order_item_id = im.order_item_id
@@ -275,7 +291,7 @@ class WC_Search_Orders_By_Product_Admin
         // and an IN list cannot be a prepare() placeholder. A phpcs:ignore
         // applies only to the following line, so the interpolations inside
         // the string need a disable/enable pair instead.
-        return $wpdb->get_col(
+        return $wpdb->get_col( // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- both IN lists are absint()ed by get_sanitized_id_list().
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
 			LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta im ON items.order_item_id = im.order_item_id
@@ -321,7 +337,7 @@ class WC_Search_Orders_By_Product_Admin
         // and an IN list cannot be a prepare() placeholder. A phpcs:ignore
         // applies only to the following line, so the interpolations inside
         // the string need a disable/enable pair instead.
-        return $wpdb->get_col(
+        return $wpdb->get_col( // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- both IN lists are absint()ed by get_sanitized_id_list().
             "SELECT DISTINCT order_id
 			FROM {$wpdb->prefix}woocommerce_order_items items
 			LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta im ON items.order_item_id = im.order_item_id
@@ -379,7 +395,7 @@ class WC_Search_Orders_By_Product_Admin
 			AND tt.term_id IN ( {$product_cat_ids} )
 		";
 
-        return $wpdb->get_col($sql);
+        return $wpdb->get_col($sql); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- both IN lists are absint()ed by get_sanitized_id_list().
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
     }
 
@@ -434,7 +450,7 @@ class WC_Search_Orders_By_Product_Admin
         // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
         // The values here are prepared. $order_table is WooCommerce's own
         // orders table name, and a table identifier cannot be a placeholder.
-        $product_type_order_ids = $wpdb->get_col(
+        $product_type_order_ids = $wpdb->get_col( // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- table name is WooCommerce's own; the value goes through prepare().
             $wpdb->prepare(
                 "
                 SELECT DISTINCT o.id
@@ -474,9 +490,19 @@ class WC_Search_Orders_By_Product_Admin
 
         self::count_filtered_search();
 
-        if (in_array($typenow, wc_get_order_types('order-meta-boxes'), true)) {
+        // shop_order only: on the shop_subscription screen this used to set
+        // post__in to shop_order ids, which emptied the subscriptions list.
+        if ('shop_order' === $typenow) {
             // return $query_vars on trash orders page.
             if (! empty($query_vars['post_status']) && ('trash' == $query_vars['post_status'])) {
+                return $query_vars;
+            }
+
+            // No filter selected: leave the query alone. This used to load
+            // every order id into post__in on each visit to the list, which
+            // also hid orders in statuses wc_get_order_statuses() omits.
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- presence check only, no state change.
+            if (empty($_GET['search_product_type']) && empty($_GET['product_id']) && empty($_GET['search_product_cat'])) {
                 return $query_vars;
             }
 
@@ -513,13 +539,25 @@ class WC_Search_Orders_By_Product_Admin
         return $query_vars;
     }
 
-    function sobp_filter_orders_hpos($order_data, $query, $sql)
+    /**
+     * Handle order filters on the HPOS orders list.
+     *
+     * @since 3.1
+     * @param array $query_args Arguments the list table passes to wc_get_orders().
+     * @return array
+     */
+    public function sobp_filter_orders_hpos($query_args)
     {
+        // Same as the legacy screen: the Trash view is left unfiltered.
+        if (! empty($query_args['status']) && in_array('trash', (array) $query_args['status'], true)) {
+            return $query_args;
+        }
+
         // phpcs:disable WordPress.Security.NonceVerification.Recommended
         // Same as sobp_filter_orders above: admin order-list filter values,
         // arrived at by a GET link, narrowing a query and changing nothing.
         if (empty($_GET['search_product_type']) && empty($_GET['product_id']) && empty($_GET['search_product_cat'])) {
-            return $order_data; // Let WooCommerce run the default query
+            return $query_args; // Let WooCommerce run the default query
         }
 
         $order_ids = self::get_order_ids_hpos();
@@ -538,15 +576,11 @@ class WC_Search_Orders_By_Product_Admin
 
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-        if (empty($order_ids)) {
-            return array( [], null, null );
-        } else {
-            $final_order_ids = array_unique($order_ids);
-            rsort($final_order_ids, SORT_NUMERIC);
-            return array( $final_order_ids, null, null );
-        }
+        // Narrow the list table's own query. WooCommerce keeps its status,
+        // ordering and pagination; array( 0 ) matches nothing.
+        $query_args['id'] = empty($order_ids) ? array( 0 ) : array_values(array_unique(array_map('absint', $order_ids)));
 
-        return $order_data;
+        return $query_args;
     }
 
     /**
