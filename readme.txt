@@ -3,7 +3,7 @@ Contributors: akshayaswaroop, wpheka
 Tags: search orders, woocommerce, order, product, filter
 Requires at least: 6.5
 Tested up to: 7.1
-Stable tag: 3.3
+Stable tag: 3.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
@@ -43,6 +43,12 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 2. Plugin settings screen
 
 == Changelog ==
+
+= 3.4 - 2026-10-01 =
+* Fix - The plugin no longer interferes with WooCommerce Subscriptions. The subscriptions list could come up empty, and Subscriptions could be handed orders where it expected subscriptions.
+* Fix - On stores using High-Performance Order Storage, a filtered orders list now respects the selected status tab and pagination, and trashed orders show in the Trash view.
+* Fix - The orders list is left untouched when no product filter is selected.
+* Enhancement - WooCommerce 11.1.2 compatibility.
 
 = 3.3 - 2026-08-22 =
 * Feature - Asks for a review on the Dashboard once the plugin has been used, with a link that pre-selects a five-star rating. Shown only after three filtered order searches, dismissed per user rather than for the whole site, and never shown again once dismissed.
