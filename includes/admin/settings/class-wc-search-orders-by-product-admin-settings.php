@@ -303,7 +303,10 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 				console.log(jQuery('#plugin-settings-form').serialize());  
 
 				jQuery.ajax({
-					url: "<?php echo esc_url( $ajax_action ); ?>",
+					// A JS string, not HTML: esc_url() turned & into &#038;, the
+					// "#" began a fragment, the nonce was never sent and every save
+					// was refused with 403. esc_url_raw() + JSON is the JS form.
+					url: <?php echo wp_json_encode( esc_url_raw( $ajax_action ) ); ?>,
 					type: 'post',
 					cache: false,
 					processData: false,

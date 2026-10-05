@@ -36,6 +36,11 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Ajax', false ) ) :
 		 */
 		public function action_save_sobp_plugin_data() {
 			check_ajax_referer( 'save-plugin-data', 'sobp_nonce' );
+
+			// The settings page requires manage_woocommerce; so does saving it.
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				wp_send_json_error( null, 403 );
+			}
 			$settings = array(
 			'search_orders_by_product_type'     => isset( $_POST['search_orders_by_product_type'] ) ? absint( $_POST['search_orders_by_product_type'] ) : 0,
 			'search_orders_by_product_category' => isset( $_POST['search_orders_by_product_category'] ) ? absint( $_POST['search_orders_by_product_category'] ) : 0,
