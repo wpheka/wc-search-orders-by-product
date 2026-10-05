@@ -3,7 +3,7 @@ Contributors: akshayaswaroop, wpheka
 Tags: search orders, woocommerce, order, product, filter
 Requires at least: 6.5
 Tested up to: 7.1.2
-Stable tag: 3.4
+Stable tag: 3.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
@@ -43,6 +43,12 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 2. Plugin settings screen
 
 == Changelog ==
+
+= 3.5 - 2026-10-05 =
+* Fix - Save Changes on the settings page works again. Since 3.3 every save was refused, so the product type and category filters could not be switched on or off.
+* Fix - Saving the settings now requires the same permission as opening the settings page.
+* Fix - Closing the review request with its X now hides it for 14 days for that user instead of returning on the next Dashboard load.
+* Enhancement - WordPress 7.1.2 compatibility.
 
 = 3.4 - 2026-10-01 =
 * Fix - The plugin no longer interferes with WooCommerce Subscriptions. The subscriptions list could come up empty, and Subscriptions could be handed orders where it expected subscriptions.

@@ -2,24 +2,24 @@
 # This file is distributed under the GPLv3 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: WC Search Orders By Product 3.4\n"
+"Project-Id-Version: WC Search Orders By Product 3.5\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wc-search-orders-by-product\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-01T13:29:52+00:00\n"
+"POT-Creation-Date: 2026-10-05T17:40:07+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wc-search-orders-by-product\n"
 
 #. Plugin Name of the plugin
 #: wc-search-orders-by-product.php
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:100
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:198
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:199
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:223
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:106
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:234
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:235
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:259
 msgid "WC Search Orders By Product"
 msgstr ""
 
@@ -48,7 +48,7 @@ msgid "View plugin settings"
 msgstr ""
 
 #: includes/admin/class-wc-search-orders-by-product-admin.php:55
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:236
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:272
 msgid "Settings"
 msgstr ""
 
@@ -93,16 +93,16 @@ msgid "Processing…"
 msgstr ""
 
 #. translators: 1: plugin name, 2: five-star rating link, 3: opening link tag to dismiss, 4: closing link tag
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:99
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:105
 #, php-format
 msgid "You have been finding orders with %1$s. If it saves you time, please leave us a %2$s rating on WordPress.org. %3$sDon't ask again%4$s."
 msgstr ""
 
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:101
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:107
 msgid "five star"
 msgstr ""
 
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:240
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:276
 msgid "This WooCommerce extension automatically adds product search, product type and product category filter dropdown in WooCommerce Orders screen. You can find orders by typing just a few characters of your product name. As you start typing in the search input, you will see instant results popping up inside the dropdown menu. The auto listing of the matching products with same characters inside the dropdown will help you in typo tolerance or if you misspell the product name."
 msgstr ""
 
