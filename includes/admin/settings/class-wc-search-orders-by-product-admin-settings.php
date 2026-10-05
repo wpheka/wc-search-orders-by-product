@@ -31,6 +31,7 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 			// Review prompt.
 			add_action( 'admin_notices', array( $this, 'sobp_review_prompt' ) );
 			add_action( 'admin_init', array( $this, 'sobp_maybe_hide_review_prompt' ) );
+			add_action( 'wp_ajax_sobp_snooze_review', array( $this, 'sobp_snooze_review_prompt' ) );
 
 		}
 
@@ -71,6 +72,11 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 				return;
 			}
 
+			// Closed with its X: asked again in 14 days, for this user only.
+			if ( (int) get_user_meta( get_current_user_id(), 'sobp_review_snoozed_until', true ) > time() ) {
+				return;
+			}
+
 			// Three filtered searches, not a timer: the plugin having been used.
 			if ( 3 > (int) get_option( 'sobp_filtered_search_count', 0 ) ) {
 				return;
@@ -91,7 +97,7 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 				'sobp_hide_review'
 			);
 			?>
-			<div class="notice notice-info is-dismissible">
+			<div id="sobp-review-notice" class="notice notice-info is-dismissible" data-nonce="<?php echo esc_attr( wp_create_nonce( 'sobp_snooze_review' ) ); ?>">
 				<p>
 					<?php
 					printf(
@@ -105,7 +111,37 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 					?>
 				</p>
 			</div>
+			<script>
+			// WordPress hides an is-dismissible notice on its X but remembers
+			// nothing, so without this the prompt was back on the next load.
+			jQuery( function ( $ ) {
+				$( document ).on( 'click', '#sobp-review-notice .notice-dismiss', function () {
+					$.post( ajaxurl, { action: 'sobp_snooze_review', _ajax_nonce: $( '#sobp-review-notice' ).data( 'nonce' ) } );
+				} );
+			} );
+			</script>
 			<?php
+		}
+
+		/**
+		 * Snooze the review prompt for 14 days when its X is clicked.
+		 *
+		 * Per user, like the permanent dismissal: closing a notice is one
+		 * person's decision. "Don't ask again" still hides it for good.
+		 *
+		 * @since 3.5
+		 * @return void
+		 */
+		public function sobp_snooze_review_prompt() {
+
+			check_ajax_referer( 'sobp_snooze_review' );
+
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				wp_send_json_error( null, 403 );
+			}
+
+			update_user_meta( get_current_user_id(), 'sobp_review_snoozed_until', time() + 14 * DAY_IN_SECONDS );
+			wp_send_json_success();
 		}
 
 		/**
