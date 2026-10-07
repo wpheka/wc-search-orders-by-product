@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-07T10:42:33+00:00\n"
+"POT-Creation-Date: 2026-10-07T13:49:33+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wc-search-orders-by-product\n"
@@ -121,11 +121,12 @@ msgid "Filters read order items directly. For faster filtering on large stores, 
 msgstr ""
 
 #: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:370
+#: templates/admin/settings/settings-form.php:27
 msgid "Filters on the orders screen"
 msgstr ""
 
 #: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:381
-#: templates/admin/settings/settings-form.php:32
+#: templates/admin/settings/settings-form.php:55
 msgid "Purchased items column"
 msgstr ""
 
@@ -142,59 +143,97 @@ msgid "Leave empty to list every category."
 msgstr ""
 
 #: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:451
-msgid "This WooCommerce extension automatically adds product search, product type and product category filter dropdown in WooCommerce Orders screen. You can find orders by typing just a few characters of your product name. As you start typing in the search input, you will see instant results popping up inside the dropdown menu. The auto listing of the matching products with same characters inside the dropdown will help you in typo tolerance or if you misspell the product name."
+msgid "Find orders by the products in them. Pick the filters to show on the WooCommerce orders screen. Product search is always on."
+msgstr ""
+
+#. translators: %s: link to the WooCommerce settings section
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:456
+#, php-format
+msgid "Shop managers can change these settings under %s."
+msgstr ""
+
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:457
+msgid "WooCommerce > Settings > Advanced > Search orders by product"
 msgstr ""
 
 #: includes/class-wc-search-orders-by-product-filters.php:48
 msgid "Product"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:57
+#: includes/class-wc-search-orders-by-product-filters.php:49
+msgid "Search by product name. A variable product also finds orders of its variations."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product-filters.php:58
 msgid "Product types"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:66
+#: includes/class-wc-search-orders-by-product-filters.php:59
+msgid "Simple, variable, grouped and other product types."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product-filters.php:68
 msgid "Product categories"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:75
-#: includes/class-wc-search-orders-by-product-filters.php:334
+#: includes/class-wc-search-orders-by-product-filters.php:69
+msgid "Shown as a tree. A category also finds orders from its sub-categories."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product-filters.php:78
+#: includes/class-wc-search-orders-by-product-filters.php:341
 msgid "SKU"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:84
+#: includes/class-wc-search-orders-by-product-filters.php:79
+msgid "Type a SKU or its first characters. Matches products and variations."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product-filters.php:88
 msgid "Payment methods"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:93
+#: includes/class-wc-search-orders-by-product-filters.php:89
+msgid "Every payment gateway on the store, including ones switched off."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product-filters.php:98
 msgid "Shipping methods"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:102
+#: includes/class-wc-search-orders-by-product-filters.php:99
+msgid "Flat rate, free shipping, local pickup and other methods."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product-filters.php:108
 msgid "Billing countries"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:248
+#: includes/class-wc-search-orders-by-product-filters.php:109
+msgid "The country on the order's billing address."
+msgstr ""
+
+#: includes/class-wc-search-orders-by-product-filters.php:255
 msgid "Search for a product&hellip;"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:283
+#: includes/class-wc-search-orders-by-product-filters.php:290
 msgid "Filter by product type"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:314
+#: includes/class-wc-search-orders-by-product-filters.php:321
 msgid "Filter by product category"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:351
+#: includes/class-wc-search-orders-by-product-filters.php:358
 msgid "Filter by payment method"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:368
+#: includes/class-wc-search-orders-by-product-filters.php:375
 msgid "Filter by shipping method"
 msgstr ""
 
-#: includes/class-wc-search-orders-by-product-filters.php:380
+#: includes/class-wc-search-orders-by-product-filters.php:387
 msgid "Filter by billing country"
 msgstr ""
 
@@ -218,12 +257,20 @@ msgstr ""
 msgid "Save Changes"
 msgstr ""
 
-#: templates/admin/settings/settings-form.php:13
-msgid "Search Orders By:"
+#: templates/admin/settings/settings-form.php:28
+msgid "Choose which filters appear above the WooCommerce orders list."
 msgstr ""
 
-#: templates/admin/settings/settings-form.php:15
-msgid "Enable"
+#: templates/admin/settings/settings-form.php:35
+msgid "(always on)"
+msgstr ""
+
+#: templates/admin/settings/settings-form.php:50
+msgid "Orders list"
+msgstr ""
+
+#: templates/admin/settings/settings-form.php:56
+msgid "Shows the items and quantities of each order in the orders list."
 msgstr ""
 
 #: templates/admin/settings/sidebar-support.php:14

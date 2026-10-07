@@ -723,3 +723,130 @@
 	border-top-right-radius: 22px;
 	border-bottom-right-radius: 22px;
 }
+
+/* Settings form (4.0): grouped options with switches. */
+.sobp-settings .sobp-group {
+	margin: 0 0 24px;
+	padding: 20px 22px 22px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+
+.sobp-settings .sobp-group__title {
+	margin: 0 0 4px;
+	font-size: 15px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.sobp-settings .sobp-group__intro {
+	margin: 0 0 16px;
+	color: #50575e;
+}
+
+.sobp-settings .sobp-options {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 280px, 1fr ) );
+	gap: 12px;
+}
+
+.sobp-settings .sobp-group__title + .sobp-options {
+	margin-top: 12px;
+}
+
+.sobp-settings .sobp-option {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 14px 16px;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+	background: #f9f9f9;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.sobp-settings .sobp-option:hover {
+	border-color: #8c8f94;
+}
+
+.sobp-settings .sobp-option:has( .sobp-switch:checked ) {
+	background: #f3f1ff;
+	border-color: #c5bdfb;
+}
+
+.sobp-settings .sobp-option--locked {
+	cursor: default;
+}
+
+.sobp-settings .sobp-option--locked:hover {
+	border-color: #c5bdfb;
+}
+
+.sobp-settings .sobp-option__text {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.sobp-settings .sobp-option__label {
+	font-weight: 600;
+	color: #1d2327;
+	line-height: 20px;
+}
+
+.sobp-settings .sobp-option__description {
+	color: #50575e;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+/* The checkbox itself, drawn as a switch. */
+.sobp-settings input[type="checkbox"].sobp-switch {
+	-webkit-appearance: none;
+	appearance: none;
+	flex: 0 0 auto;
+	position: relative;
+	width: 36px;
+	height: 20px;
+	margin: 0;
+	border: 0;
+	border-radius: 10px;
+	background: #c3c4c7;
+	box-shadow: none;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.sobp-settings input[type="checkbox"].sobp-switch::before {
+	content: "";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 16px;
+	height: 16px;
+	margin: 0;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 1px 2px rgba( 0, 0, 0, 0.25 );
+	transition: transform 0.15s ease;
+}
+
+.sobp-settings input[type="checkbox"].sobp-switch:checked {
+	background: #5b3cf6;
+}
+
+.sobp-settings input[type="checkbox"].sobp-switch:checked::before {
+	transform: translateX( 16px );
+}
+
+.sobp-settings input[type="checkbox"].sobp-switch:focus-visible {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
+.sobp-settings input[type="checkbox"].sobp-switch:disabled {
+	cursor: default;
+	opacity: 0.6;
+}

@@ -29,7 +29,7 @@ final class WC_Search_Orders_By_Product_Filters {
 	 * The registered filters.
 	 *
 	 * Each entry: query_var (URL parameter), value_key (key in the values array
-	 * the engine reads), label, setting (sobp_settings key, or '' if always on),
+	 * the engine reads), label, description (one line for the settings page), setting (sobp_settings key, or '' if always on),
 	 * default (on when the setting has never been saved), sanitize (callable
 	 * turning the raw URL value into the stored value) and render (callable
 	 * printing the control, given the current value).
@@ -46,6 +46,7 @@ final class WC_Search_Orders_By_Product_Filters {
 				'query_var' => 'product_id',
 				'value_key' => 'product_ids',
 				'label'     => __( 'Product', 'wc-search-orders-by-product' ),
+				'description' => __( 'Search by product name. A variable product also finds orders of its variations.', 'wc-search-orders-by-product' ),
 				'setting'   => '',
 				'default'   => true,
 				'sanitize'  => array( $this, 'sanitize_id_list' ),
@@ -55,6 +56,7 @@ final class WC_Search_Orders_By_Product_Filters {
 				'query_var' => 'search_product_type',
 				'value_key' => 'product_type',
 				'label'     => __( 'Product types', 'wc-search-orders-by-product' ),
+				'description' => __( 'Simple, variable, grouped and other product types.', 'wc-search-orders-by-product' ),
 				'setting'   => 'search_orders_by_product_type',
 				'default'   => true,
 				'sanitize'  => 'sanitize_title',
@@ -64,6 +66,7 @@ final class WC_Search_Orders_By_Product_Filters {
 				'query_var' => 'search_product_cat',
 				'value_key' => 'category_ids',
 				'label'     => __( 'Product categories', 'wc-search-orders-by-product' ),
+				'description' => __( 'Shown as a tree. A category also finds orders from its sub-categories.', 'wc-search-orders-by-product' ),
 				'setting'   => 'search_orders_by_product_category',
 				'default'   => true,
 				'sanitize'  => array( $this, 'sanitize_id_list' ),
@@ -73,6 +76,7 @@ final class WC_Search_Orders_By_Product_Filters {
 				'query_var' => 'search_sku',
 				'value_key' => 'sku',
 				'label'     => __( 'SKU', 'wc-search-orders-by-product' ),
+				'description' => __( 'Type a SKU or its first characters. Matches products and variations.', 'wc-search-orders-by-product' ),
 				'setting'   => 'search_orders_by_sku',
 				'default'   => false,
 				'sanitize'  => array( $this, 'sanitize_text' ),
@@ -82,6 +86,7 @@ final class WC_Search_Orders_By_Product_Filters {
 				'query_var' => 'search_payment_method',
 				'value_key' => 'payment_method',
 				'label'     => __( 'Payment methods', 'wc-search-orders-by-product' ),
+				'description' => __( 'Every payment gateway on the store, including ones switched off.', 'wc-search-orders-by-product' ),
 				'setting'   => 'search_orders_by_payment_method',
 				'default'   => false,
 				'sanitize'  => array( $this, 'sanitize_text' ),
@@ -91,6 +96,7 @@ final class WC_Search_Orders_By_Product_Filters {
 				'query_var' => 'search_shipping_method',
 				'value_key' => 'shipping_method',
 				'label'     => __( 'Shipping methods', 'wc-search-orders-by-product' ),
+				'description' => __( 'Flat rate, free shipping, local pickup and other methods.', 'wc-search-orders-by-product' ),
 				'setting'   => 'search_orders_by_shipping_method',
 				'default'   => false,
 				'sanitize'  => array( $this, 'sanitize_text' ),
@@ -100,6 +106,7 @@ final class WC_Search_Orders_By_Product_Filters {
 				'query_var' => 'search_billing_country',
 				'value_key' => 'billing_country',
 				'label'     => __( 'Billing countries', 'wc-search-orders-by-product' ),
+				'description' => __( 'The country on the order\'s billing address.', 'wc-search-orders-by-product' ),
 				'setting'   => 'search_orders_by_billing_country',
 				'default'   => false,
 				'sanitize'  => array( $this, 'sanitize_country' ),

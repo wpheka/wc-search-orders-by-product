@@ -448,7 +448,15 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 							</div>
 							<div class='wpheka-box-content'>
 								<div class='content mb22'>
-									<p><?php esc_html_e( 'This WooCommerce extension automatically adds product search, product type and product category filter dropdown in WooCommerce Orders screen. You can find orders by typing just a few characters of your product name. As you start typing in the search input, you will see instant results popping up inside the dropdown menu. The auto listing of the matching products with same characters inside the dropdown will help you in typo tolerance or if you misspell the product name.', 'wc-search-orders-by-product' ); ?>
+									<p><?php esc_html_e( 'Find orders by the products in them. Pick the filters to show on the WooCommerce orders screen. Product search is always on.', 'wc-search-orders-by-product' ); ?></p>
+									<p>
+										<?php
+										printf(
+											/* translators: %s: link to the WooCommerce settings section */
+											esc_html__( 'Shop managers can change these settings under %s.', 'wc-search-orders-by-product' ),
+											'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=advanced&section=wc_search_orders_by_product' ) ) . '">' . esc_html__( 'WooCommerce > Settings > Advanced > Search orders by product', 'wc-search-orders-by-product' ) . '</a>'
+										);
+										?>
 									</p>
 								</div>
 								<?php require plugin_dir_path( WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_FILE ) . 'templates/admin/settings/settings-form.php'; ?>
@@ -462,7 +470,7 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 				var element = jQuery(this);
 
 				var fd = new FormData();
-				jQuery('#plugin-settings-form input[type=checkbox]').each(function () {
+				jQuery('#plugin-settings-form input[type=checkbox]:not(:disabled)').each(function () {
 					fd.append(this.name, this.checked ? '1' : '0');
 				});
 
