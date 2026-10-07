@@ -169,7 +169,8 @@ final class WC_Search_Orders_By_Product_Engine {
 	public function get_source( $storage ) {
 		$cached = get_transient( self::COVERAGE_TRANSIENT );
 
-		if ( ! is_array( $cached ) || ! isset( $cached[ $storage ] ) ) {
+		// An entry without its check time cannot bound the recent window, so it is refreshed.
+		if ( ! is_array( $cached ) || ! isset( $cached[ $storage ] ) || empty( $cached[ $storage . '_at' ] ) ) {
 			$cached                      = is_array( $cached ) ? $cached : array();
 			$cached[ $storage . '_at' ]  = time();
 			$cached[ $storage ]          = $this->lookup_is_complete( $storage ) ? self::SOURCE_LOOKUP : self::SOURCE_ITEMS;
