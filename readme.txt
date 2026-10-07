@@ -75,7 +75,9 @@ Only if you choose to. When you deactivate the plugin you can send an optional f
 * Feature - A "Purchased" column in the orders list shows the items of each order.
 * Feature - The category filter now includes sub-categories and shows the category tree. You can limit which categories it lists.
 * Feature - Settings are also under WooCommerce > Settings > Advanced, where shop managers can change them.
-* Enhancement - Much faster on large stores. Filters are added to WooCommerce's own order query instead of loading every order first: on 100,000 orders a filtered page now takes under 1.2 seconds instead of 7 to 10 seconds. The product type filter no longer times out.
+* Enhancement - Much faster on large stores. Filters are added to WooCommerce's own order query instead of loading every order first. On a test store with 100,000 orders the plugin's filtering takes 0.1 to 1.2 seconds instead of 7 to 10 seconds. The product type filter no longer times out.
+* Enhancement - The filters on the orders screen sit on their own line and use WooCommerce's searchable dropdowns.
+* Enhancement - Redesigned settings page with a short description for each option.
 * Enhancement - The product type and category filters are on by default, as the description always said.
 * Enhancement - Developer hooks to add filters, conditions and settings (docs/hooks.md).
 * Fix - Orders in statuses registered by other plugins are no longer dropped from filtered results.
