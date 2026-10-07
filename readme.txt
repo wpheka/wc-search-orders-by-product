@@ -70,7 +70,7 @@ Only if you choose to. When you deactivate the plugin you can send an optional f
 
 == Changelog ==
 
-= 4.0 - unreleased =
+= 4.0 - 2026-10-07 =
 * Feature - New filters: SKU, payment method, shipping method and billing country. Switch them on in WooCommerce > Settings > Advanced > Search orders by product.
 * Feature - A "Purchased" column in the orders list shows the items of each order.
 * Feature - The category filter now includes sub-categories and shows the category tree. You can limit which categories it lists.
