@@ -174,7 +174,11 @@ process.on('uncaughtException', crashed);
         // the second visit, the same as on the WooCommerce settings page.
         await page.evaluate(() => document.querySelector('.wpheka-save-changes').click());
         const r = await resp;
-        if (r.status() === 200) await reloaded;
+        if (r.status() === 200) {
+          // A 200 save must be followed by the reload; a failed wait is a failure.
+          const nav = await reloaded;
+          if (nav instanceof Error) throw nav;
+        }
         return String(r.status());
       };
       await page.waitForSelector('#search_orders_by_product_category');
