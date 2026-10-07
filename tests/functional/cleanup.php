@@ -32,7 +32,7 @@ foreach ( array( 'admin', 'manager' ) as $key ) {
 	}
 	// Visiting the Dashboard makes WordPress create a Quick Draft auto-draft
 	// for the user; wp_delete_user() would move it to the trash, not delete it.
-	foreach ( get_posts( array( 'author' => $ids[ $key ], 'post_type' => 'any', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids' ) ) as $post_id ) {
+	foreach ( get_posts( array( 'author' => $ids[ $key ], 'post_type' => 'any', 'post_status' => array_keys( get_post_stati() ), 'numberposts' => -1, 'fields' => 'ids' ) ) as $post_id ) {
 		wp_delete_post( $post_id, true );
 	}
 	wp_delete_user( $ids[ $key ] );

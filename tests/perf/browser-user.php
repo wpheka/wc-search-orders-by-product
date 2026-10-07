@@ -8,7 +8,7 @@ if ( 'delete' === ( $args[0] ?? '' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/user.php';
 	$user = get_user_by( 'login', $login );
 	if ( $user ) {
-		foreach ( get_posts( array( 'author' => $user->ID, 'post_type' => 'any', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids' ) ) as $post_id ) {
+		foreach ( get_posts( array( 'author' => $user->ID, 'post_type' => 'any', 'post_status' => array_keys( get_post_stati() ), 'numberposts' => -1, 'fields' => 'ids' ) ) as $post_id ) {
 			wp_delete_post( $post_id, true );
 		}
 		wp_delete_user( $user->ID );

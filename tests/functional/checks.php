@@ -60,3 +60,26 @@ foreach ( $cases as $values ) {
 	}
 }
 sobp_t_result( ( 'posts' === $storage ? 'legacy' : $storage ) . ": lookup table and order item meta give the same orders", empty( $diff ), implode( '; ', $diff ) );
+
+// Stalled background sync: an order missing from the lookup table, changed
+// three hours ago, with the coverage check last run five hours ago, must still
+// be found through order item meta (CodeRabbit finding on 4.0).
+$o4_lookup = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}wc_order_product_lookup WHERE order_id = %d", $ids['o4'] ), ARRAY_A );
+$wpdb->delete( "{$wpdb->prefix}wc_order_product_lookup", array( 'order_id' => $ids['o4'] ) );
+$three_hours_ago = gmdate( 'Y-m-d H:i:s', time() - 3 * HOUR_IN_SECONDS );
+$wpdb->update( "{$wpdb->prefix}wc_orders", array( 'date_updated_gmt' => $three_hours_ago ), array( 'id' => $ids['o4'] ) );
+$wpdb->update( $wpdb->posts, array( 'post_modified_gmt' => $three_hours_ago ), array( 'ID' => $ids['o4'] ) );
+set_transient( WC_Search_Orders_By_Product_Engine::COVERAGE_TRANSIENT, array( $storage => 'lookup', $storage . '_at' => time() - 5 * HOUR_IN_SECONDS ), HOUR_IN_SECONDS );
+$col   = 'hpos' === $storage ? "{$wpdb->prefix}wc_orders.id" : 'p.ID';
+$sql   = 'hpos' === $storage
+	? "SELECT id FROM {$wpdb->prefix}wc_orders WHERE type = 'shop_order' AND status <> 'trash' AND billing_email = 'zz-sobp@example.invalid'"
+	: "SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_billing_email' AND pm.meta_value = 'zz-sobp@example.invalid' WHERE p.post_type = 'shop_order' AND p.post_status <> 'trash'";
+foreach ( $engine->get_conditions( array( 'product_ids' => array( (int) $ids['D'] ) ), $col, $storage ) as $c ) {
+	$sql .= " AND {$c}";
+}
+$found = array_map( 'intval', $wpdb->get_col( $sql ) );
+sobp_t_result( ( 'posts' === $storage ? 'legacy' : $storage ) . ': an order the stalled lookup sync missed is still found', array( (int) $ids['o4'] ) === $found, 'found ' . wp_json_encode( $found ) . ', source ' . $engine->last_source );
+foreach ( $o4_lookup as $row ) {
+	$wpdb->insert( "{$wpdb->prefix}wc_order_product_lookup", $row );
+}
+delete_transient( WC_Search_Orders_By_Product_Engine::COVERAGE_TRANSIENT );

@@ -170,8 +170,9 @@ final class WC_Search_Orders_By_Product_Engine {
 		$cached = get_transient( self::COVERAGE_TRANSIENT );
 
 		if ( ! is_array( $cached ) || ! isset( $cached[ $storage ] ) ) {
-			$cached             = is_array( $cached ) ? $cached : array();
-			$cached[ $storage ] = $this->lookup_is_complete( $storage ) ? self::SOURCE_LOOKUP : self::SOURCE_ITEMS;
+			$cached                      = is_array( $cached ) ? $cached : array();
+			$cached[ $storage . '_at' ]  = time();
+			$cached[ $storage ]          = $this->lookup_is_complete( $storage ) ? self::SOURCE_LOOKUP : self::SOURCE_ITEMS;
 			set_transient( self::COVERAGE_TRANSIENT, $cached, 12 * HOUR_IN_SECONDS );
 		}
 
@@ -185,6 +186,24 @@ final class WC_Search_Orders_By_Product_Engine {
 		$available = apply_filters( 'wc_search_orders_by_product_lookup_available', self::SOURCE_LOOKUP === $cached[ $storage ], $storage );
 
 		return $available ? self::SOURCE_LOOKUP : self::SOURCE_ITEMS;
+	}
+
+	/**
+	 * Orders changed at or after this time are matched through order item meta too.
+	 *
+	 * The coverage check only proves orders changed an hour before it ran are
+	 * in the lookup table, and its result is kept for 12 hours. Everything
+	 * changed since then is checked through item meta, so a store whose
+	 * background sync has stalled still finds its new orders.
+	 *
+	 * @param string $storage 'hpos' or 'posts'.
+	 * @return int Unix time.
+	 */
+	public function get_recent_cutoff( $storage ) {
+		$cached  = get_transient( self::COVERAGE_TRANSIENT );
+		$checked = is_array( $cached ) && ! empty( $cached[ $storage . '_at' ] ) ? (int) $cached[ $storage . '_at' ] : time();
+
+		return min( time(), $checked ) - self::RECENT_SECONDS;
 	}
 
 	/**
@@ -302,7 +321,7 @@ final class WC_Search_Orders_By_Product_Engine {
 	}
 
 	/**
-	 * Add orders changed in the last hour, matched through item meta, to a lookup condition.
+	 * Add orders changed since the last coverage check, matched through item meta, to a lookup condition.
 	 *
 	 * @param string $lookup_condition Condition built on the lookup table.
 	 * @param string $items_sql        The same match through order item meta.
@@ -313,7 +332,7 @@ final class WC_Search_Orders_By_Product_Engine {
 	private function with_recent( $lookup_condition, $items_sql, $id_column, $storage ) {
 		global $wpdb;
 
-		$recent = $this->orders_table_sql( $storage, gmdate( 'Y-m-d H:i:s', time() - self::RECENT_SECONDS ), '>=' );
+		$recent = $this->orders_table_sql( $storage, gmdate( 'Y-m-d H:i:s', $this->get_recent_cutoff( $storage ) ), '>=' );
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter -- built from constants, absint()ed ids and a prepared date.
 		$ids = array_map( 'absint', $wpdb->get_col( "SELECT DISTINCT x.order_id FROM ( {$items_sql} ) x INNER JOIN ( {$recent} ) r ON r.order_id = x.order_id" ) );
