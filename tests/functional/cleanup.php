@@ -16,19 +16,28 @@ foreach ( $wpdb->get_col( "SELECT id FROM {$wpdb->prefix}wc_orders WHERE type = 
 		$deleted++;
 	}
 }
-foreach ( array( 'VS', 'VM', 'V', 'A', 'C', 'D' ) as $key ) {
+foreach ( array( 'VS', 'VM', 'V', 'A', 'C', 'D', 'E' ) as $key ) {
 	if ( ! empty( $ids[ $key ] ) && ( $p = wc_get_product( $ids[ $key ] ) ) ) {
 		$p->delete( true );
 	}
 }
-foreach ( array( 'cat_a', 'cat_b' ) as $key ) {
+foreach ( array( 'cat_bc', 'cat_a', 'cat_b' ) as $key ) {
 	if ( ! empty( $ids[ $key ] ) ) {
 		wp_delete_term( $ids[ $key ], 'product_cat' );
 	}
 }
-if ( ! empty( $ids['admin'] ) ) {
-	wp_delete_user( $ids['admin'] );
+foreach ( array( 'admin', 'manager' ) as $key ) {
+	if ( empty( $ids[ $key ] ) ) {
+		continue;
+	}
+	// Visiting the Dashboard makes WordPress create a Quick Draft auto-draft
+	// for the user; wp_delete_user() would move it to the trash, not delete it.
+	foreach ( get_posts( array( 'author' => $ids[ $key ], 'post_type' => 'any', 'post_status' => array_keys( get_post_stati() ), 'numberposts' => -1, 'fields' => 'ids' ) ) as $post_id ) {
+		wp_delete_post( $post_id, true );
+	}
+	wp_delete_user( $ids[ $key ] );
 }
+delete_transient( 'wc_search_orders_by_product_lookup_coverage' );
 foreach ( array( 'settings' => 'sobp_settings', 'search_count' => 'sobp_filtered_search_count' ) as $key => $option ) {
 	if ( '__unset__' === ( $ids[ $key ] ?? '__unset__' ) ) {
 		delete_option( $option );

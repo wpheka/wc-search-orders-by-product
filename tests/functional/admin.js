@@ -15,7 +15,7 @@ const record = (ok, name, detail) => { const line = `${ok ? 'PASS' : 'FAIL'}|${n
 const A = ids.admin_url;
 const LIST = STORE === 'hpos' ? `${A}admin.php?page=wc-orders` : `${A}edit.php?post_type=shop_order`;
 const ST = STORE === 'hpos' ? 'status' : 'post_status';
-const MINE = ['o1', 'o2', 'o3', 'o4', 'o5'].map(k => ids[k]);
+const MINE = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6'].map(k => ids[k]);
 const name = s => `${STORE}: ${s}`;
 
 (async () => {
@@ -55,22 +55,46 @@ const name = s => `${STORE}: ${s}`;
   try {
     const r = await rows('');
     const dropdowns = [await page.locator('select#product_id').count(), await page.locator('select#dropdown_product_type').count(), await page.locator('select.dropdown_product_cat').count()];
-    record(want(['o1', 'o2', 'o3', 'o4']).every(id => r.listed.includes(id)) && !r.listed.includes(ids.o5) && dropdowns.join() === '1,1,1',
-      name('no filter: every order listed, product/type/category dropdowns shown'), `mine ${JSON.stringify(r.mine)}, dropdowns ${dropdowns}`);
+    const added = ['#search_sku', 'select#search_payment_method', 'select#search_shipping_method', 'select#search_billing_country'];
+    const addedCounts = await Promise.all(added.map(sel => page.locator(sel).count()));
+    record(want(['o1', 'o2', 'o3', 'o4', 'o6']).every(id => r.listed.includes(id)) && !r.listed.includes(ids.o5) && dropdowns.join() === '1,1,1' && addedCounts.join() === '1,1,1,1',
+      name('no filter: every order listed, all seven filter controls shown'), `mine ${JSON.stringify(r.mine)}, dropdowns ${dropdowns}, new controls ${addedCounts}`);
   } catch (e) { record(false, name('no filter: orders screen loads'), e.message.split('\n')[0]); }
+
+  // Purchased items column: o3 lists both of its products.
+  try {
+    await rows('');
+    const rowId = STORE === 'hpos' ? `#order-${ids.o3}` : `#post-${ids.o3}`;
+    const cell = (await page.locator(`${rowId} td.column-sobp_items`).innerText()).replace(/\s+/g, ' ');
+    record(/1 × ZZ SOBP Product A/.test(cell) && /1 × ZZ SOBP Variable V/.test(cell), name('purchased items column lists the order\'s items'), `cell "${cell}"`);
+  } catch (e) { record(false, name('purchased items column'), e.message.split('\n')[0]); }
 
   await exact('product A', `product_id=${ids.A}`, ['o1', 'o3']);
   await exact('variable product V (parent) finds orders for its variations', `product_id=${ids.V}`, ['o2', 'o3']);
   // A product type is not unique to the test catalogue, so only the test orders are judged.
   await mineOnly('product type "variable"', 'search_product_type=variable', ['o2', 'o3']);
-  await mineOnly('product type "simple"', 'search_product_type=simple', ['o1', 'o3', 'o4']);
-  await exact('category B', `search_product_cat=${ids.cat_b}`, ['o2', 'o3']);
+  await mineOnly('product type "simple"', 'search_product_type=simple', ['o1', 'o3', 'o4', 'o6']);
+  await exact('category B includes its sub-category', `search_product_cat=${ids.cat_b}`, ['o2', 'o3', 'o6']);
+  await exact('sub-category alone', `search_product_cat=${ids.cat_bc}`, ['o6']);
   await exact('category A', `search_product_cat=${ids.cat_a}`, ['o1', 'o3', 'o4']);
   await exact('product A + category B (both must match)', `product_id=${ids.A}&search_product_cat=${ids.cat_b}`, ['o3']);
   await exact('type "variable" + product A', `search_product_type=variable&product_id=${ids.A}`, ['o3']);
   await exact('Processing tab + product A', `${ST}=wc-processing&product_id=${ids.A}`, ['o1', 'o3']);
   await mineOnly('Completed tab + type "variable"', `${ST}=wc-completed&search_product_type=variable`, ['o2']);
   await exact('a product no order contains lists nothing', `product_id=${ids.C}`, []);
+  await exact('SKU of product A', 'search_sku=ZZSOBP-A', ['o1', 'o3']);
+  await exact('SKU prefix of the variations', 'search_sku=ZZSOBP-V', ['o2', 'o3']);
+  await exact('SKU of one variation', 'search_sku=ZZSOBP-V-S', ['o2']);
+  await exact('an unknown SKU lists nothing', 'search_sku=ZZSOBP-NOPE', []);
+  // Payment, country and shipping are not unique to the test orders.
+  await mineOnly('payment method "cod"', 'search_payment_method=cod', ['o1', 'o3']);
+  await mineOnly('billing country GB', 'search_billing_country=GB', ['o4']);
+  await mineOnly('billing country CA', 'search_billing_country=CA', ['o2', 'o6']);
+  await mineOnly('shipping method flat_rate', 'search_shipping_method=flat_rate', ['o1']);
+  await mineOnly('shipping method free_shipping', 'search_shipping_method=free_shipping', ['o3']);
+  await exact('product A + payment "cod"', `product_id=${ids.A}&search_payment_method=cod`, ['o1', 'o3']);
+  await exact('category A + billing country US', `search_product_cat=${ids.cat_a}&search_billing_country=US`, ['o1', 'o3']);
+  await exact('Processing tab + SKU prefix of the variations', `${ST}=wc-processing&search_sku=ZZSOBP-V`, ['o3']);
   try {
     const r = await rows(`${ST}=trash&product_id=${ids.A}`);
     record(r.listed.includes(ids.o5), name('Trash view still lists the trashed order'), `listed ${JSON.stringify(r.listed)}`);
@@ -85,6 +109,51 @@ const name = s => `${STORE}: ${s}`;
           'hpos: Subscriptions screen loads untouched, no product filter on it', `status ${resp.status()}`);
       } catch (e) { record(false, 'hpos: Subscriptions screen loads', e.message.split('\n')[0]); }
     }
+
+    // The review counter now increases on HPOS (setup reset it to 0).
+    try {
+      const count = parseInt(JSON.parse(php('option.php', 'sobp_filtered_search_count')), 10);
+      record(count >= 3, 'hpos: filtering on the HPOS screen counts towards the review prompt', `counter ${count}`);
+    } catch (e) { record(false, 'hpos: review counter', e.message.split('\n')[0]); }
+
+    // WooCommerce > Settings > Advanced section: switch the SKU filter off and on.
+    try {
+      const wcs = `${A}admin.php?page=wc-settings&tab=advanced&section=wc_search_orders_by_product`;
+      const box = '#sobp_settings\\[search_orders_by_sku\\]';
+      const saveWc = async checked => {
+        await page.goto(wcs, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector(box);
+        await page.locator(box).setChecked(checked, { force: true });
+        // A DOM click: Playwright's own click waits for something overlaying
+        // the button on the second visit and never clicks it.
+        await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.evaluate(() => document.querySelector('button[name="save"]').click())]);
+      };
+      await saveWc(false);
+      const storedOff = JSON.parse(php('settings.php')).search_orders_by_sku;
+      await page.goto(LIST, { waitUntil: 'domcontentloaded' });
+      const off = await page.locator('#search_sku').count();
+      await saveWc(true);
+      const storedOn = JSON.parse(php('settings.php')).search_orders_by_sku;
+      await page.goto(LIST, { waitUntil: 'domcontentloaded' });
+      const on = await page.locator('#search_sku').count();
+      record(storedOff === 'no' && off === 0 && storedOn === 'yes' && on === 1, 'hpos: WooCommerce settings section switches the SKU filter off and on', `stored ${storedOff}/${storedOn}, box ${off}/${on}`);
+    } catch (e) { record(false, 'hpos: WooCommerce settings section', e.message.split('\n')[0]); }
+    // Whatever happened above, the later cases need every filter on.
+    php('enable-all.php');
+
+    // A shop manager can filter orders and reach the settings section.
+    try {
+      const mctx = await browser.newContext({ viewport: { width: 1400, height: 1200 } });
+      await mctx.addCookies(ids.manager_cookies);
+      const mp = await mctx.newPage(); mp.setDefaultTimeout(120000); track(mp);
+      await mp.goto(`${LIST}&product_id=${ids.A}`, { waitUntil: 'domcontentloaded' });
+      const listed = await mp.$$eval('#the-list tr[id]', trs => trs.map(t => parseInt(t.id.replace(/\D/g, ''), 10)));
+      const filtered = JSON.stringify(listed.sort((a, b) => a - b)) === JSON.stringify(want(['o1', 'o3']));
+      const resp = await mp.goto(`${A}admin.php?page=wc-settings&tab=advanced&section=wc_search_orders_by_product`, { waitUntil: 'domcontentloaded' });
+      const field = await mp.locator('#sobp_settings\\[search_orders_by_sku\\]').count();
+      record(filtered && resp.status() === 200 && field === 1, 'hpos: a shop manager can filter orders and open the settings section', `filtered ${JSON.stringify(listed)}, settings ${resp.status()}, field ${field}`);
+      await mctx.close();
+    } catch (e) { record(false, 'hpos: shop manager', e.message.split('\n')[0]); }
 
     // Settings: switch the category filter off, then back on.
     try {
@@ -115,7 +184,7 @@ const name = s => `${STORE}: ${s}`;
       await save();
       await page.goto(LIST, { waitUntil: 'domcontentloaded' });
       const on = await page.locator('select.dropdown_product_cat').count();
-      record(reply.startsWith('200') && String(storedOff) === '0' && off === 0 && on === 1, 'hpos: Settings save, and switch the category filter off and on again', `save reply ${reply}, stored ${stored}, dropdown off ${off} on ${on}`);
+      record(reply.startsWith('200') && ['0', 'no'].includes(String(storedOff)) && off === 0 && on === 1, 'hpos: Settings save, and switch the category filter off and on again', `save reply ${reply}, stored ${stored}, dropdown off ${off} on ${on}`);
     } catch (e) { record(false, 'hpos: Settings page saves', e.message.split('\n')[0]); }
 
     // Review prompt, on a fresh page so nothing from the Settings step is still loading.
