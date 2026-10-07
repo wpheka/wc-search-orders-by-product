@@ -45,14 +45,14 @@ class WC_Search_Orders_By_Product_Admin {
 		add_filter( 'plugin_action_links_' . WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_BASENAME, array( __CLASS__, 'plugin_action_links' ) );
 
 		// Legacy (posts) orders screen.
-		add_action( 'restrict_manage_posts', array( $this, 'render_filters_legacy' ) );
+		add_action( 'restrict_manage_posts', array( $this, 'render_filters_legacy' ), 100 );
 		add_filter( 'request', array( $this, 'filter_legacy_request' ), PHP_INT_MAX );
 		add_filter( 'posts_where', array( $this, 'legacy_posts_where' ), 10, 2 );
 
 		// HPOS orders screen. The list table's own query-args filter fires only
 		// for the shop_order admin list, never for other order queries (My
 		// Account, REST, WooCommerce Subscriptions' lookups).
-		add_action( 'woocommerce_order_list_table_restrict_manage_orders', array( $this, 'render_filters_hpos' ) );
+		add_action( 'woocommerce_order_list_table_restrict_manage_orders', array( $this, 'render_filters_hpos' ), 100 );
 		add_filter( 'woocommerce_shop_order_list_table_prepare_items_query_args', array( $this, 'filter_hpos_query_args' ), PHP_INT_MAX );
 		add_filter( 'woocommerce_orders_table_query_clauses', array( $this, 'hpos_query_clauses' ), 10, 3 );
 
@@ -88,7 +88,7 @@ class WC_Search_Orders_By_Product_Admin {
 		// shop_order only: the queries match shop orders, so on the
 		// subscriptions screen every filter would empty the list.
 		if ( 'shop_order' === $typenow && $this->user_can_filter() ) {
-			$this->filters->render( 'posts' );
+			$this->render_filter_row( 'posts' );
 		}
 	}
 
@@ -100,7 +100,29 @@ class WC_Search_Orders_By_Product_Admin {
 	 */
 	public function render_filters_hpos( $order_type = 'shop_order' ) {
 		if ( 'shop_order' === $order_type && $this->user_can_filter() ) {
-			$this->filters->render( 'hpos' );
+			$this->render_filter_row( 'hpos' );
+		}
+	}
+
+	/**
+	 * Print the controls on their own line after WooCommerce's filters.
+	 *
+	 * The line break is an empty flex item (see admin.css); WooCommerce's
+	 * Filter button follows the controls, ending the line.
+	 *
+	 * @param string $storage 'hpos' or 'posts'.
+	 * @return void
+	 */
+	private function render_filter_row( $storage ) {
+		echo '<span class="sobp-filters-break" aria-hidden="true"></span>';
+		$this->filters->render( $storage );
+
+		if ( $this->filters->is_filtering( $this->filters->get_values() ) ) {
+			$keys = array();
+			foreach ( $this->filters->get_fields() as $field ) {
+				$keys[] = $field['query_var'];
+			}
+			echo '<a class="sobp-clear-filters" href="' . esc_url( remove_query_arg( array_merge( $keys, array( 'paged' ) ) ) ) . '">' . esc_html__( 'Clear filters', 'wc-search-orders-by-product' ) . '</a>';
 		}
 	}
 

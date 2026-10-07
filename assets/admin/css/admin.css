@@ -1,3 +1,52 @@
 .toplevel_page_wpheka_plugin_panel .wp-menu-image img {
 	padding: 5px 0 0 0 !important;
 }
+/* Orders screen filter bar (4.0). WordPress floats each control, so a long
+   bar wrapped into gaps and the Filter button landed mid-row. Flex keeps
+   the order: WooCommerce's filters, then a line with this plugin's filters
+   and the Filter button. */
+.post-type-shop_order .tablenav.top .actions:not(.bulkactions) {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	padding-bottom: 6px;
+}
+
+.post-type-shop_order .tablenav.top .actions:not(.bulkactions) > * {
+	float: none;
+	margin: 0;
+}
+
+.post-type-shop_order .tablenav.top .sobp-filters-break {
+	flex-basis: 100%;
+	height: 0;
+}
+
+.post-type-shop_order .tablenav.top .actions .sobp-select + .select2-container {
+	width: 150px !important;
+}
+
+.post-type-shop_order .tablenav.top .actions #product_id + .select2-container {
+	width: 210px !important;
+}
+
+.post-type-shop_order .tablenav.top .actions .sobp-sku {
+	width: 100px;
+	min-height: 30px;
+}
+
+.post-type-shop_order .tablenav.top .sobp-clear-filters {
+	order: 99;
+	margin-left: 4px;
+	line-height: 30px;
+}
+
+/* Purchased column: one item per line, no awkward wrapping. */
+.post-type-shop_order .column-sobp_items {
+	width: 20%;
+}
+
+.post-type-shop_order .column-sobp_items .sobp-items-more {
+	color: #646970;
+}

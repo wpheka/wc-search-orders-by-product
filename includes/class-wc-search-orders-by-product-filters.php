@@ -252,13 +252,13 @@ final class WC_Search_Orders_By_Product_Filters {
 				'class'            => 'wc-product-search',
 				'id'               => 'product_id',
 				'name'             => 'product_id',
-				'data-placeholder' => __( 'Search for a product&hellip;', 'wc-search-orders-by-product' ),
+				'data-placeholder' => __( 'Product or variation&hellip;', 'wc-search-orders-by-product' ),
 				'data-action'      => 'woocommerce_json_search_products_and_variations',
 				'data-allow_clear' => 'true',
-				'style'            => 'width: 240px;',
 			)
 		);
 
+		$this->print_label( (string) ( $attributes['id'] ?? 'product_id' ), __( 'Filter by product or variation', 'wc-search-orders-by-product' ) );
 		echo '<select';
 		foreach ( $attributes as $name => $attr_value ) {
 			echo ' ' . esc_attr( $name ) . '="' . esc_attr( $attr_value ) . '"';
@@ -286,8 +286,9 @@ final class WC_Search_Orders_By_Product_Filters {
 		 */
 		$types = (array) apply_filters( 'wc_search_orders_by_product_product_types', wc_get_product_types() );
 
-		echo '<select name="search_product_type" id="dropdown_product_type">';
-		echo '<option value="">' . esc_html__( 'Filter by product type', 'wc-search-orders-by-product' ) . '</option>';
+		$this->print_label( 'dropdown_product_type', __( 'Filter by product type', 'wc-search-orders-by-product' ) );
+		echo '<select name="search_product_type" id="dropdown_product_type" class="wc-enhanced-select sobp-select" data-placeholder="' . esc_attr__( 'Product type', 'wc-search-orders-by-product' ) . '" data-allow_clear="true">';
+		echo '<option value=""></option>';
 		foreach ( $types as $slug => $label ) {
 			echo '<option value="' . esc_attr( $slug ) . '"' . selected( (string) $value, (string) $slug, false ) . '>' . esc_html( $label ) . '</option>';
 		}
@@ -314,21 +315,31 @@ final class WC_Search_Orders_By_Product_Filters {
 			array(
 				'taxonomy'          => 'product_cat',
 				'name'              => 'search_product_cat',
-				'class'             => 'dropdown_product_cat',
+				'class'             => 'dropdown_product_cat wc-enhanced-select sobp-select',
 				'id'                => 'dropdown_product_cat',
 				'hierarchical'      => true,
 				'hide_empty'        => false,
-				'show_option_none'  => __( 'Filter by product category', 'wc-search-orders-by-product' ),
+				'show_option_none'  => __( 'Category', 'wc-search-orders-by-product' ),
 				'option_none_value' => '',
 				'value_field'       => 'term_id',
 				'selected'          => $value ? absint( current( (array) $value ) ) : 0,
 				'include'           => $include,
 				'orderby'           => 'name',
-				'echo'              => true,
+				'echo'              => false,
 			)
 		);
 
-		wp_dropdown_categories( $args );
+		$this->print_label( (string) $args['id'], __( 'Filter by product category', 'wc-search-orders-by-product' ) );
+		$html = (string) wp_dropdown_categories( $args );
+
+		// wp_dropdown_categories() cannot print data attributes; add the ones
+		// WooCommerce's enhanced select reads. The placeholder needs an empty
+		// first option, which show_option_none with option_none_value '' gives.
+		echo str_replace( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_dropdown_categories() output, escaped by WordPress; the added attributes are escaped here.
+			'<select ',
+			'<select data-placeholder="' . esc_attr__( 'Category', 'wc-search-orders-by-product' ) . '" data-allow_clear="true" ',
+			$html
+		);
 	}
 
 	/**
@@ -338,7 +349,8 @@ final class WC_Search_Orders_By_Product_Filters {
 	 * @return void
 	 */
 	public function render_sku( $value ) {
-		echo '<input type="search" name="search_sku" id="search_sku" value="' . esc_attr( (string) $value ) . '" placeholder="' . esc_attr__( 'SKU', 'wc-search-orders-by-product' ) . '" style="width: 120px;" />';
+		$this->print_label( 'search_sku', __( 'Filter by SKU', 'wc-search-orders-by-product' ) );
+		echo '<input type="search" name="search_sku" id="search_sku" value="' . esc_attr( (string) $value ) . '" placeholder="' . esc_attr__( 'SKU', 'wc-search-orders-by-product' ) . '" class="sobp-sku" />';
 	}
 
 	/**
@@ -355,7 +367,7 @@ final class WC_Search_Orders_By_Product_Filters {
 			}
 		}
 
-		$this->print_select( 'search_payment_method', __( 'Filter by payment method', 'wc-search-orders-by-product' ), $options, $value );
+		$this->print_select( 'search_payment_method', __( 'Payment', 'wc-search-orders-by-product' ), __( 'Filter by payment method', 'wc-search-orders-by-product' ), $options, $value );
 	}
 
 	/**
@@ -372,7 +384,7 @@ final class WC_Search_Orders_By_Product_Filters {
 			}
 		}
 
-		$this->print_select( 'search_shipping_method', __( 'Filter by shipping method', 'wc-search-orders-by-product' ), $options, $value );
+		$this->print_select( 'search_shipping_method', __( 'Shipping', 'wc-search-orders-by-product' ), __( 'Filter by shipping method', 'wc-search-orders-by-product' ), $options, $value );
 	}
 
 	/**
@@ -384,25 +396,38 @@ final class WC_Search_Orders_By_Product_Filters {
 	public function render_billing_country( $value ) {
 		$options = function_exists( 'WC' ) && WC()->countries ? WC()->countries->get_countries() : array();
 
-		$this->print_select( 'search_billing_country', __( 'Filter by billing country', 'wc-search-orders-by-product' ), $options, $value );
+		$this->print_select( 'search_billing_country', __( 'Country', 'wc-search-orders-by-product' ), __( 'Filter by billing country', 'wc-search-orders-by-product' ), $options, $value );
 	}
 
 	/**
 	 * Print a plain dropdown.
 	 *
 	 * @param string      $name        Field name and id.
-	 * @param string      $placeholder First, empty option.
+	 * @param string      $placeholder Short text shown when nothing is chosen.
+	 * @param string      $label       Full name for screen readers.
 	 * @param array       $options     Value => label.
 	 * @param string|null $value       Selected value.
 	 * @return void
 	 */
-	private function print_select( $name, $placeholder, array $options, $value ) {
-		echo '<select name="' . esc_attr( $name ) . '" id="' . esc_attr( $name ) . '">';
-		echo '<option value="">' . esc_html( $placeholder ) . '</option>';
+	private function print_select( $name, $placeholder, $label, array $options, $value ) {
+		$this->print_label( $name, $label );
+		echo '<select name="' . esc_attr( $name ) . '" id="' . esc_attr( $name ) . '" class="wc-enhanced-select sobp-select" data-placeholder="' . esc_attr( $placeholder ) . '" data-allow_clear="true">';
+		echo '<option value=""></option>';
 		foreach ( $options as $option_value => $label ) {
 			echo '<option value="' . esc_attr( $option_value ) . '"' . selected( (string) $value, (string) $option_value, false ) . '>' . esc_html( $label ) . '</option>';
 		}
 		echo '</select>';
+	}
+
+	/**
+	 * Screen-reader label for a control, as WooCommerce gives its own filters.
+	 *
+	 * @param string $control_id Control id.
+	 * @param string $label      Text.
+	 * @return void
+	 */
+	private function print_label( $control_id, $label ) {
+		echo '<label for="' . esc_attr( $control_id ) . '" class="screen-reader-text">' . esc_html( $label ) . '</label>';
 	}
 
 	/**
