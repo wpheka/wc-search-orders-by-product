@@ -210,7 +210,7 @@ final class WC_Search_Orders_By_Product_Engine {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
 		// Table names come from $wpdb and WooCommerce; $orders is built from
 		// constants and a prepared date in orders_table_sql().
-		$missing = (int) $wpdb->get_var(
+		$missing = (int) $wpdb->get_var( // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $orders comes from orders_table_sql(): fixed SQL with a prepared date.
 			"SELECT COUNT(*)
 			FROM {$wpdb->prefix}woocommerce_order_items i
 			INNER JOIN ( {$orders} ) o ON o.order_id = i.order_id
@@ -315,7 +315,7 @@ final class WC_Search_Orders_By_Product_Engine {
 
 		$recent = $this->orders_table_sql( $storage, gmdate( 'Y-m-d H:i:s', time() - self::RECENT_SECONDS ), '>=' );
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- built from constants, absint()ed ids and a prepared date.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter -- built from constants, absint()ed ids and a prepared date.
 		$ids = array_map( 'absint', $wpdb->get_col( "SELECT DISTINCT x.order_id FROM ( {$items_sql} ) x INNER JOIN ( {$recent} ) r ON r.order_id = x.order_id" ) );
 
 		if ( empty( $ids ) ) {

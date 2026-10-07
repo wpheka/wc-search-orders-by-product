@@ -15,14 +15,14 @@ defined( 'ABSPATH' ) || exit;
 				<h3><?php esc_html_e( 'Enable', 'wc-search-orders-by-product' ); ?></h3>
 				<div id="wpheka-custom-form-fields">
 					<?php
-					foreach ( wc_search_orders_by_product()->filters->get_fields() as $sobp_field ) {
-						if ( empty( $sobp_field['setting'] ) ) {
+					foreach ( wc_search_orders_by_product()->filters->get_fields() as $wc_search_orders_by_product_field ) {
+						if ( empty( $wc_search_orders_by_product_field['setting'] ) ) {
 							continue;
 						}
 						?>
-						<label for="<?php echo esc_attr( $sobp_field['setting'] ); ?>" style="margin-right: 15px; display: inline-block;">
-							<input name="<?php echo esc_attr( $sobp_field['setting'] ); ?>" type="checkbox" id="<?php echo esc_attr( $sobp_field['setting'] ); ?>" value="1" <?php checked( wc_search_orders_by_product_setting_enabled( $sobp_field['setting'], ! empty( $sobp_field['default'] ) ) ); ?> />
-							<?php echo esc_html( $sobp_field['label'] ); ?>
+						<label for="<?php echo esc_attr( $wc_search_orders_by_product_field['setting'] ); ?>" style="margin-right: 15px; display: inline-block;">
+							<input name="<?php echo esc_attr( $wc_search_orders_by_product_field['setting'] ); ?>" type="checkbox" id="<?php echo esc_attr( $wc_search_orders_by_product_field['setting'] ); ?>" value="1" <?php checked( wc_search_orders_by_product_setting_enabled( $wc_search_orders_by_product_field['setting'], ! empty( $wc_search_orders_by_product_field['default'] ) ) ); ?> />
+							<?php echo esc_html( $wc_search_orders_by_product_field['label'] ); ?>
 						</label>
 						<?php
 					}

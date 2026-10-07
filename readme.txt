@@ -2,8 +2,8 @@
 Contributors: akshayaswaroop, wpheka
 Tags: search orders, woocommerce, order, product, filter
 Requires at least: 6.5
-Tested up to: 7.1.2
-Stable tag: 3.5
+Tested up to: 7.1.3
+Stable tag: 4.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
