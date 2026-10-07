@@ -62,8 +62,10 @@ Only if you choose to. When you deactivate the plugin you can send an optional f
 
 == Screenshots ==
 
-1. Plugin settings link.
-2. Plugin settings screen
+1. The orders screen with the product, type, category, payment, shipping, country and SKU filters and the Purchased column.
+2. Orders filtered by the start of a SKU, here every variation of one product.
+3. Orders filtered by a category (sub-categories included) and a billing country.
+4. Settings under WooCommerce > Settings > Advanced > Search orders by product.
 
 == Changelog ==
 
