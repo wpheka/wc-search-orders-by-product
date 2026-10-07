@@ -43,12 +43,12 @@ LOG="$WP_PATH/wp-content/debug.log"
 OFFSET=$(wc -c < "$LOG" 2>/dev/null || echo 0)
 
 echo "== setup";       wpe "$HERE/setup.php" | sed 's/^/  /'
-echo "== HPOS";        node "$HERE/admin.js" hpos || true
+echo "== HPOS";        node "$HERE/admin.js" hpos || echo "FAIL|hpos: browser script exited with an error (cases after the failure did not run)" >> "$STATE/results"
                        wpe "$HERE/checks.php" | sed 's/^/  /'
 if [ "$HPOS_BEFORE" = "yes" ]; then
   echo "== legacy storage"
   wp --path="$WP_PATH" option update woocommerce_custom_orders_table_enabled no >/dev/null 2>&1
-  node "$HERE/admin.js" legacy || true
+  node "$HERE/admin.js" legacy || echo "FAIL|legacy: browser script exited with an error (cases after the failure did not run)" >> "$STATE/results"
   wpe "$HERE/checks.php" | sed 's/^/  /'
   wp --path="$WP_PATH" option update woocommerce_custom_orders_table_enabled yes >/dev/null 2>&1
   BACK=$(wp --path="$WP_PATH" option get woocommerce_custom_orders_table_enabled 2>/dev/null | tail -1)

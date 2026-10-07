@@ -17,6 +17,10 @@ const LIST = STORE === 'hpos' ? `${A}admin.php?page=wc-orders` : `${A}edit.php?p
 const ST = STORE === 'hpos' ? 'status' : 'post_status';
 const MINE = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6'].map(k => ids[k]);
 const name = s => `${STORE}: ${s}`;
+// A crash must show as a failure, never as cases that silently did not run.
+const crashed = e => { record(false, name('browser cases ran to the end'), (e && e.message || String(e)).split('\n')[0]); process.exit(1); };
+process.on('unhandledRejection', crashed);
+process.on('uncaughtException', crashed);
 
 (async () => {
   const browser = await chromium.launch();
@@ -163,8 +167,12 @@ const name = s => `${STORE}: ${s}`;
         const resp = page.waitForResponse(r => r.request().method() === 'POST' && r.url().includes('save_sobp_plugin_data'));
         // A successful save reloads the page; wait for that reload to finish so
         // the next step does not race it.
-        const reloaded = page.waitForNavigation({ waitUntil: 'load' });
-        await page.locator('.wpheka-save-changes').click();
+        // .catch: if the save never answers, the reload wait must not become
+        // an unhandled rejection that ends the whole run (it did, silently).
+        const reloaded = page.waitForNavigation({ waitUntil: 'load' }).catch(e => e);
+        // A DOM click: Playwright's own click on this button stopped landing on
+        // the second visit, the same as on the WooCommerce settings page.
+        await page.evaluate(() => document.querySelector('.wpheka-save-changes').click());
         const r = await resp;
         if (r.status() === 200) await reloaded;
         return String(r.status());
@@ -213,7 +221,11 @@ const name = s => `${STORE}: ${s}`;
         'hpos: review prompt "Don\'t ask again" hides it for good', 'still shown');
     } catch (e) { record(false, 'hpos: review prompt Don\'t ask again', e.message.split('\n')[0]); }
   }
-  const real = errors.filter(e => !/Transition was skipped/.test(e));
+  record(true, name('browser cases ran to the end'), '');
+  // WooCommerce PayPal Payments throws React error #299 from its own settings
+  // script on every WooCommerce settings page of this site, General included
+  // (checked 2026-10-07), so it says nothing about this plugin.
+  const real = errors.filter(e => !/Transition was skipped/.test(e) && !/woocommerce-paypal-payments\/assets\/ppcp-settings/.test(e));
   record(real.length === 0, name('no JavaScript errors on these screens'), JSON.stringify(real));
   await browser.close();
 })();
