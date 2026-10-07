@@ -8,9 +8,7 @@
  */
 
 require_once dirname( __DIR__, 2 ) . '/includes/class-wc-search-orders-by-product-engine.php';
-if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin' ) ) {
-	require_once dirname( __DIR__, 2 ) . '/includes/admin/class-wc-search-orders-by-product-admin.php';
-}
+require_once __DIR__ . '/load-35.php';
 
 global $wpdb;
 
@@ -19,7 +17,7 @@ $wpdb->query( 'SET SESSION max_execution_time = 60000' );
 
 $storage = 'yes' === get_option( 'woocommerce_custom_orders_table_enabled' ) ? 'hpos' : 'posts';
 $engine  = new WC_Search_Orders_By_Product_Engine();
-$admin   = new ReflectionClass( 'WC_Search_Orders_By_Product_Admin' );
+$admin   = new ReflectionClass( 'WC_Search_Orders_By_Product_Admin_35' );
 $inst    = $admin->newInstanceWithoutConstructor();
 $base    = array(
 	'limit'    => 20,

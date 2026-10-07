@@ -49,6 +49,7 @@ if [ "$HPOS_BEFORE" = "yes" ]; then
   echo "== legacy storage"
   wp --path="$WP_PATH" option update woocommerce_custom_orders_table_enabled no >/dev/null 2>&1
   node "$HERE/admin.js" legacy || true
+  wpe "$HERE/checks.php" | sed 's/^/  /'
   wp --path="$WP_PATH" option update woocommerce_custom_orders_table_enabled yes >/dev/null 2>&1
   BACK=$(wp --path="$WP_PATH" option get woocommerce_custom_orders_table_enabled 2>/dev/null | tail -1)
   [ "$BACK" = "yes" ] && echo "PASS|order storage switched back to HPOS" >> "$STATE/results" || echo "FAIL|order storage switched back to HPOS -- option is $BACK" >> "$STATE/results"

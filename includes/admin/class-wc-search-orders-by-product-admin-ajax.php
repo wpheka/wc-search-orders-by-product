@@ -22,11 +22,7 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Ajax', false ) ) :
 		 * WC_Search_Orders_By_Product_Admin_Ajax Constructor.
 		 */
 		public function __construct() {
-
-			$plugin_token = str_replace( '-', '_', wc_search_orders_by_product()->text_domain );
-
 			add_action( 'wp_ajax_save_sobp_plugin_data', array( $this, 'action_save_sobp_plugin_data' ) );
-			add_action( 'wp_ajax_' . $plugin_token . '_deactivation_popup', array( $this, 'action_save_sobp_deactivation_popup_data' ) );
 		}
 
 		/**
@@ -37,77 +33,14 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Ajax', false ) ) :
 		public function action_save_sobp_plugin_data() {
 			check_ajax_referer( 'save-plugin-data', 'sobp_nonce' );
 
-			// The settings page requires manage_woocommerce; so does saving it.
-			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			if ( ! current_user_can( wc_search_orders_by_product_capability( 'manage_woocommerce' ) ) ) {
 				wp_send_json_error( null, 403 );
 			}
-			$settings = array(
-			'search_orders_by_product_type'     => isset( $_POST['search_orders_by_product_type'] ) ? absint( $_POST['search_orders_by_product_type'] ) : 0,
-			'search_orders_by_product_category' => isset( $_POST['search_orders_by_product_category'] ) ? absint( $_POST['search_orders_by_product_category'] ) : 0,
-		);
 
-		wc_search_orders_by_product_save_settings( $settings );
+			$settings = WC_Search_Orders_By_Product_Admin_Settings::sanitize_settings( wp_unslash( $_POST ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized field by field in sanitize_settings().
+
+			wc_search_orders_by_product_save_settings( $settings );
 			wp_send_json_success();
-			wp_die();
-		}
-
-		/**
-		 * AJAX Action to save deactivation popup data
-		 *
-		 * @return void
-		 */
-		public function action_save_sobp_deactivation_popup_data() {
-
-			$plugin_token = str_replace( '-', '_', wc_search_orders_by_product()->text_domain );
-			if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), $plugin_token . 'deactivate_feedback_nonce' ) ) {
-				wp_send_json_error();
-			}
-
-			$feedback_url = wc_search_orders_by_product()->api_feedback_url;
-
-			$deactivation_reason = '';
-			$deactivation_domain = '';
-			$deactivation_license_key = '';
-			$email = '';
-
-			if ( ! empty( $_POST['deactivation_reason'] ) ) {
-				$deactivation_reason = sanitize_text_field( wp_unslash( $_POST['deactivation_reason'] ) );
-
-				if ( $deactivation_reason == 'Other' ) {
-					if ( ! empty( $_POST['deactivation_reason_other'] ) ) {
-						$deactivation_reason = sanitize_textarea_field( wp_unslash( $_POST['deactivation_reason_other'] ) );
-					}
-				}
-			}
-
-			if ( ! empty( $_POST['deactivation_domain'] ) ) {
-				$deactivation_domain = esc_url_raw( wp_unslash( $_POST['deactivation_domain'] ) );
-			}
-
-			if ( ! empty( $_POST['deactivation_license_key'] ) ) {
-				$deactivation_license_key = sanitize_text_field( wp_unslash( $_POST['deactivation_license_key'] ) );
-			}
-
-			if ( ! empty( $_POST['email'] ) ) {
-				$email = sanitize_email( wp_unslash( $_POST['email'] ) );
-			}
-
-			wp_remote_post(
-				$feedback_url,
-				array(
-					'timeout' => 30,
-					'body' => array(
-						'plugin' => wc_search_orders_by_product()->plugin_name,
-						'deactivation_reason' => $deactivation_reason,
-						'deactivation_domain' => $deactivation_domain,
-						'deactivation_license_key' => $deactivation_license_key,
-						'email' => $email,
-					),
-				)
-			);
-
-			wp_send_json_success();
-
 			wp_die();
 		}
 

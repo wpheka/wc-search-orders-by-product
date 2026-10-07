@@ -52,6 +52,30 @@ final class WC_Search_Orders_By_Product
     public $plugin_name;
 
     /**
+     * Orders screen handler. Set in admin requests.
+     *
+     * @var WC_Search_Orders_By_Product_Admin|null
+     * @since 4.0
+     */
+    public $admin = null;
+
+    /**
+     * Query engine.
+     *
+     * @var WC_Search_Orders_By_Product_Engine|null
+     * @since 4.0
+     */
+    public $engine = null;
+
+    /**
+     * Filter registry.
+     *
+     * @var WC_Search_Orders_By_Product_Filters|null
+     * @since 4.0
+     */
+    public $filters = null;
+
+    /**
      * The single instance of the class.
      *
      * @var WC_Search_Orders_By_Product
@@ -117,6 +141,20 @@ final class WC_Search_Orders_By_Product
     private function init_hooks()
     {
         add_action('init', array( $this, 'init' ), 0);
+        add_action('plugins_loaded', array( $this, 'ready' ), 20);
+    }
+
+    /**
+     * Tell add-ons the plugin is loaded.
+     *
+     * wc_search_orders_by_product_loaded fires while this file is included,
+     * before most other plugins load, so add-ons should use this action.
+     *
+     * @since 4.0
+     */
+    public function ready()
+    {
+        do_action('wc_search_orders_by_product_ready', $this);
     }
 
     /**
@@ -216,6 +254,11 @@ final class WC_Search_Orders_By_Product
          * Core classes.
          */
 
+        include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/class-wc-search-orders-by-product-engine.php';
+        include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/class-wc-search-orders-by-product-filters.php';
+        $this->engine  = new WC_Search_Orders_By_Product_Engine();
+        $this->filters = new WC_Search_Orders_By_Product_Filters();
+
         // Include ajax class.
         if ($this->is_request('ajax')) {
             include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/class-wc-search-orders-by-product-admin-ajax.php';
@@ -224,6 +267,7 @@ final class WC_Search_Orders_By_Product
         // Include admin class.
         if ($this->is_request('admin')) {
             include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/class-wc-search-orders-by-product-admin.php';
+            $this->admin = new WC_Search_Orders_By_Product_Admin($this->filters, $this->engine);
             include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php';
             include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/class-wc-search-orders-by-product-deactivation-popup.php';
         }

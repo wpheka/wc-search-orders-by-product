@@ -50,7 +50,8 @@ final class WC_Search_Orders_By_Product_Engine {
 	/**
 	 * Build the SQL conditions for a set of filter values.
 	 *
-	 * @param array  $values    Sanitised values: product_ids (int[]), category_ids (int[]), product_type (string).
+	 * @param array  $values    Sanitised values: product_ids (int[]), category_ids (int[]), product_type,
+	 *                          payment_method, shipping_method, billing_country and sku (strings).
 	 * @param string $id_column Fully qualified order id column of the list query.
 	 * @param string $storage   'hpos' or 'posts'.
 	 * @return string[] Conditions to AND into the query's WHERE clause.
@@ -73,7 +74,90 @@ final class WC_Search_Orders_By_Product_Engine {
 			$conditions[] = $this->ids_condition( $this->products_of_type( $values['product_type'] ), array(), $id_column, $storage, $source );
 		}
 
+		if ( isset( $values['sku'] ) && '' !== $values['sku'] ) {
+			$conditions[] = $this->product_condition( $this->products_by_sku( $values['sku'] ), $id_column, $storage, $source );
+		}
+
+		if ( ! empty( $values['payment_method'] ) ) {
+			$conditions[] = $this->order_field_condition( 'payment_method', $values['payment_method'], $id_column, $storage );
+		}
+
+		if ( ! empty( $values['billing_country'] ) ) {
+			$conditions[] = $this->order_field_condition( 'billing_country', $values['billing_country'], $id_column, $storage );
+		}
+
+		if ( ! empty( $values['shipping_method'] ) ) {
+			$conditions[] = $this->shipping_method_condition( $values['shipping_method'], $id_column );
+		}
+
 		return $conditions;
+	}
+
+	/**
+	 * Condition on an order field stored in the orders table (HPOS) or post meta (legacy).
+	 *
+	 * @param string $field     'payment_method' or 'billing_country'.
+	 * @param string $value     Value to match exactly.
+	 * @param string $id_column Order id column.
+	 * @param string $storage   'hpos' or 'posts'.
+	 * @return string
+	 */
+	private function order_field_condition( $field, $value, $id_column, $storage ) {
+		global $wpdb;
+
+		if ( 'hpos' === $storage ) {
+			if ( 'payment_method' === $field ) {
+				return $wpdb->prepare( "{$id_column} IN ( SELECT o.id FROM {$wpdb->prefix}wc_orders o WHERE o.payment_method = %s )", $value ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- column and table names are fixed.
+			}
+
+			return $wpdb->prepare( "{$id_column} IN ( SELECT a.order_id FROM {$wpdb->prefix}wc_order_addresses a WHERE a.address_type = 'billing' AND a.country = %s )", $value ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- column and table names are fixed.
+		}
+
+		$meta_key = 'payment_method' === $field ? '_payment_method' : '_billing_country';
+
+		return $wpdb->prepare( "{$id_column} IN ( SELECT pm.post_id FROM {$wpdb->postmeta} pm WHERE pm.meta_key = %s AND pm.meta_value = %s )", $meta_key, $value ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- column name is fixed.
+	}
+
+	/**
+	 * Condition for orders with a shipping line of the given shipping method.
+	 *
+	 * @param string $method_id Shipping method id, for example 'flat_rate'.
+	 * @param string $id_column Order id column.
+	 * @return string
+	 */
+	private function shipping_method_condition( $method_id, $id_column ) {
+		global $wpdb;
+
+		$sql = "SELECT sobp_ship.order_id FROM (
+			SELECT DISTINCT i.order_id
+			FROM {$wpdb->prefix}woocommerce_order_itemmeta m
+			STRAIGHT_JOIN {$wpdb->prefix}woocommerce_order_items i ON i.order_item_id = m.order_item_id
+			WHERE i.order_item_type = 'shipping' AND m.meta_key = 'method_id' AND m.meta_value = %s
+		) sobp_ship";
+
+		return "{$id_column} IN ( " . $wpdb->prepare( $sql, $method_id ) . ' )'; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql is a fixed string with one placeholder.
+	}
+
+	/**
+	 * Product and variation ids whose current SKU starts with the given text.
+	 *
+	 * Uses WooCommerce's indexed product meta lookup table. Capped at 1,000 matches.
+	 *
+	 * @param string $sku SKU or its beginning.
+	 * @return int[]
+	 */
+	public function products_by_sku( $sku ) {
+		global $wpdb;
+
+		$sku = trim( (string) $sku );
+		if ( '' === $sku ) {
+			return array();
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- indexed lookup, runs once per filtered page.
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT product_id FROM {$wpdb->prefix}wc_product_meta_lookup WHERE sku LIKE %s LIMIT 1000", $wpdb->esc_like( $sku ) . '%' ) );
+
+		return array_map( 'absint', $ids );
 	}
 
 	/**

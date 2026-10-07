@@ -7,35 +7,58 @@ Stable tag: 3.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
-A simple plugin that helps you search your WooCommerce orders by product.
+Filter your WooCommerce orders by product, variation, category, SKU, payment method, shipping method and country.
 
 == Description ==
-WC Search Orders By Product does exactly what it says - This WooCommerce extension **automatically** adds product search, product type and product category filter dropdown in WooCommerce Orders screen. You can find orders by typing just a few characters of your product name. As you start typing in the search input, you will see instant results popping up inside the dropdown menu. The auto listing of the matching products with same characters inside the dropdown will help you in typo tolerance or if you misspell the product name.
+WC Search Orders By Product adds filters to the WooCommerce Orders screen so you can find the orders that contain a product. Start typing a product name in the product box and pick it from the list. The orders list then shows only the orders with that product, together with the status tabs, search and month filter you already use.
 
-= Search woocommerce orders: =
+= Filter orders by: =
 
-* By product **name**
-* By product **type**
-* By product **category**
+* Product or a single variation (searched by name)
+* Product type
+* Product category, including its sub-categories
+* SKU or the start of a SKU
+* Payment method
+* Shipping method
+* Billing country
 
-If you enjoyed this plugin then please put a review, that will encourage me to bring some more …
+Filters work together, so you can ask for "orders with this product, paid by cash on delivery, from Canada".
+
+= Also included =
+
+* A "Purchased" column in the orders list showing the items of each order.
+* Fast on large stores. Filters are added to WooCommerce's own order query. When WooCommerce Analytics data is available its indexed tables are used. Tested with 100,000 orders.
+* Works with High-Performance Order Storage (HPOS) and with the older posts storage.
+* Developer hooks to add your own filters. See docs/hooks.md in the plugin's GitHub repository.
 
 == Installation ==
 
 = Minimum Requirements =
 
 * WooCommerce 3.0 or later
+* PHP 8.1 or later
 
-1. Upload 'wc-Search-orders-by-product' to the '/wp-content/plugins/' directory or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to Admin area -> WPHEKA -> WC Search Orders By Product Settings
-4. Go to Admin area -> WooCommerce -> Orders
-5. Done!
+1. Install the plugin through the WordPress plugins screen or upload the plugin folder to the `/wp-content/plugins/` directory.
+2. Activate the plugin through the Plugins screen.
+3. Go to WooCommerce > Orders. The product, product type and category filters are shown straight away.
+4. To switch other filters or the Purchased column on or off, go to WooCommerce > Settings > Advanced > Search orders by product.
 
 == Frequently Asked Questions ==
 
-= How It Works? =
-*check installation*
+= Why are some filters not shown? =
+SKU, payment method, shipping method and country filters are off until you switch them on in WooCommerce > Settings > Advanced > Search orders by product.
+
+= Does the SKU filter find renamed SKUs? =
+It matches each product's current SKU, because WooCommerce does not save the SKU on the order. If you change a product's SKU, search by its new SKU.
+
+= Is it fast on a store with many orders? =
+Yes. Filters run inside WooCommerce's own order query instead of loading every order first. If WooCommerce Analytics has imported your order history, the plugin uses its indexed tables and the settings section says "Fast lookup is on".
+
+= Can shop managers use it? =
+Yes. Anyone who can manage orders can use the filters. Shop managers can also change the settings under WooCommerce > Settings.
+
+= Does the plugin send any data? =
+Only if you choose to. When you deactivate the plugin you can send an optional feedback form, which sends your reason, site address and email address (if you enter one) to wpheka.com. Nothing is sent unless you submit that form.
 
 == Screenshots ==
 
@@ -43,6 +66,18 @@ If you enjoyed this plugin then please put a review, that will encourage me to b
 2. Plugin settings screen
 
 == Changelog ==
+
+= 4.0 - unreleased =
+* Feature - New filters: SKU, payment method, shipping method and billing country. Switch them on in WooCommerce > Settings > Advanced > Search orders by product.
+* Feature - A "Purchased" column in the orders list shows the items of each order.
+* Feature - The category filter now includes sub-categories and shows the category tree. You can limit which categories it lists.
+* Feature - Settings are also under WooCommerce > Settings > Advanced, where shop managers can change them.
+* Enhancement - Much faster on large stores. Filters are added to WooCommerce's own order query instead of loading every order first: on 100,000 orders a filtered page now takes under 1.2 seconds instead of 7 to 10 seconds. The product type filter no longer times out.
+* Enhancement - The product type and category filters are on by default, as the description always said.
+* Enhancement - Developer hooks to add filters, conditions and settings (docs/hooks.md).
+* Fix - Orders in statuses registered by other plugins are no longer dropped from filtered results.
+* Fix - The review request could never appear on stores using High-Performance Order Storage.
+* Fix - Removed an unused AJAX handler and a broken settings registration.
 
 = 3.5 - 2026-10-05 =
 * Fix - Save Changes on the settings page works again. Since 3.3 every save was refused, so the product type and category filters could not be switched on or off.

@@ -9,13 +9,11 @@
  */
 
 require_once dirname( __DIR__, 2 ) . '/includes/class-wc-search-orders-by-product-engine.php';
-if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin' ) ) {
-	require_once dirname( __DIR__, 2 ) . '/includes/admin/class-wc-search-orders-by-product-admin.php';
-}
+require_once __DIR__ . '/load-35.php';
 
 global $wpdb;
 
-$admin   = new ReflectionClass( 'WC_Search_Orders_By_Product_Admin' );
+$admin   = new ReflectionClass( 'WC_Search_Orders_By_Product_Admin_35' );
 $call    = function ( $name, ...$args ) use ( $admin ) {
 	$m = $admin->getMethod( $name );
 	$m->setAccessible( true );

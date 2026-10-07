@@ -149,6 +149,47 @@ function wc_search_orders_by_product_save_settings($settings)
     update_option('sobp_settings', array_merge((array) get_option('sobp_settings', array()), $settings));
 }
 
+/**
+ * Whether a setting is switched on.
+ *
+ * The plugin's own settings screen stores 1 or 0 and WooCommerce's settings
+ * API stores 'yes' or 'no', so both are understood. A setting that was never
+ * saved takes its default.
+ *
+ * @since 4.0
+ * @param string $key     Key in sobp_settings.
+ * @param bool   $default Value when never saved.
+ * @return bool
+ */
+function wc_search_orders_by_product_setting_enabled($key, $default = false)
+{
+    $settings = wc_search_orders_by_product_settings();
+
+    if (!array_key_exists($key, $settings)) {
+        return (bool) $default;
+    }
+
+    return in_array($settings[$key], array(1, '1', 'yes', true), true);
+}
+
+/**
+ * Capability needed to use the filters or change the settings.
+ *
+ * @since 4.0
+ * @param string $default Capability for this context.
+ * @return string
+ */
+function wc_search_orders_by_product_capability($default = 'manage_woocommerce')
+{
+    /**
+     * Capability for the filters ('edit_shop_orders') or the settings ('manage_woocommerce').
+     *
+     * @since 4.0
+     * @param string $capability Capability.
+     */
+    return (string) apply_filters('wc_search_orders_by_product_capability', $default);
+}
+
 // Include the main WC_Search_Orders_By_Product class.
 if (!class_exists('WC_Search_Orders_By_Product')) {
     include_once dirname(__FILE__) . '/includes/class-wc-search-orders-by-product.php';

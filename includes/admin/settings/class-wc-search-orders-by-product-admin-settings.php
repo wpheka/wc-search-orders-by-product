@@ -28,6 +28,11 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 			add_action( 'admin_menu', array( $this, 'sobp_search_settings_menu' ), 20 );
 			add_action( 'admin_enqueue_scripts', array( &$this, 'sobp_enqueue_admin_scripts_styles' ) );
 
+			// The same settings under WooCommerce > Settings > Advanced, reachable by
+			// shop managers and working without the WPHEKA framework.
+			add_filter( 'woocommerce_get_sections_advanced', array( $this, 'add_wc_settings_section' ) );
+			add_filter( 'woocommerce_get_settings_advanced', array( $this, 'get_wc_settings' ), 10, 2 );
+
 			// Review prompt.
 			add_action( 'admin_notices', array( $this, 'sobp_review_prompt' ) );
 			add_action( 'admin_init', array( $this, 'sobp_maybe_hide_review_prompt' ) );
@@ -189,7 +194,14 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 		 * Register search settings
 		 */
 		public function sobp_search_settings_init() {
-			register_setting( 'sobp_search_options', 'sobp_settings', array( $this, 'sobp_search_options_validate' ) );
+			register_setting(
+				'sobp_search_options',
+				'sobp_settings',
+				array(
+					'type'              => 'array',
+					'sanitize_callback' => array( __CLASS__, 'normalize_option' ),
+				)
+			);
 		}
 
 		/**
@@ -240,6 +252,169 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 		}
 
 		/**
+		 * Settings keys that are on/off switches, with their default.
+		 *
+		 * @return array key => default (bool)
+		 */
+		public static function toggle_keys() {
+			$keys = array();
+			foreach ( wc_search_orders_by_product()->filters->get_fields() as $field ) {
+				if ( ! empty( $field['setting'] ) ) {
+					$keys[ $field['setting'] ] = ! empty( $field['default'] );
+				}
+			}
+			$keys['purchased_items_column'] = true;
+
+			return $keys;
+		}
+
+		/**
+		 * Sanitise a settings form post: every switch is saved, absent means off.
+		 *
+		 * @param array $raw Unslashed form data.
+		 * @return array
+		 */
+		public static function sanitize_settings( $raw ) {
+			$raw      = (array) $raw;
+			$settings = array();
+
+			foreach ( array_keys( self::toggle_keys() ) as $key ) {
+				$value            = $raw[ $key ] ?? '';
+				$settings[ $key ] = in_array( $value, array( 1, '1', 'yes', 'on', true ), true ) ? 'yes' : 'no';
+			}
+
+			if ( isset( $raw['category_include'] ) ) {
+				$settings['category_include'] = array_values( array_filter( array_map( 'absint', (array) $raw['category_include'] ) ) );
+			}
+
+			/**
+			 * Settings about to be saved from a settings form.
+			 *
+			 * @since 4.0
+			 * @param array $settings Sanitised settings.
+			 * @param array $raw      Raw form data (unslashed, unsanitised).
+			 */
+			return (array) apply_filters( 'wc_search_orders_by_product_sanitize_settings', $settings, $raw );
+		}
+
+		/**
+		 * Normalise the stored option whenever it is updated.
+		 *
+		 * Switches become 'yes' or 'no' and the category list a list of ids.
+		 * Keys this plugin does not know (an add-on's) are kept as they are.
+		 *
+		 * @param mixed $value New option value.
+		 * @return array
+		 */
+		public static function normalize_option( $value ) {
+			$value = is_array( $value ) ? $value : array();
+
+			foreach ( array_keys( self::toggle_keys() ) as $key ) {
+				if ( array_key_exists( $key, $value ) ) {
+					$value[ $key ] = in_array( $value[ $key ], array( 1, '1', 'yes', 'on', true ), true ) ? 'yes' : 'no';
+				}
+			}
+
+			if ( isset( $value['category_include'] ) ) {
+				$value['category_include'] = array_values( array_filter( array_map( 'absint', (array) $value['category_include'] ) ) );
+			}
+
+			return $value;
+		}
+
+		/**
+		 * Add the section to WooCommerce > Settings > Advanced.
+		 *
+		 * @param array $sections Sections.
+		 * @return array
+		 */
+		public function add_wc_settings_section( $sections ) {
+			$sections['wc_search_orders_by_product'] = __( 'Search orders by product', 'wc-search-orders-by-product' );
+
+			return $sections;
+		}
+
+		/**
+		 * Fields of the WooCommerce settings section.
+		 *
+		 * @param array  $settings        Settings of the current section.
+		 * @param string $current_section Current section id.
+		 * @return array
+		 */
+		public function get_wc_settings( $settings, $current_section ) {
+			if ( 'wc_search_orders_by_product' !== $current_section ) {
+				return $settings;
+			}
+
+			$engine  = wc_search_orders_by_product()->engine;
+			$storage = class_exists( '\Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ? 'hpos' : 'posts';
+			$fast    = $engine && WC_Search_Orders_By_Product_Engine::SOURCE_LOOKUP === $engine->get_source( $storage );
+
+			$fields = array(
+				array(
+					'title' => __( 'Search orders by product', 'wc-search-orders-by-product' ),
+					'type'  => 'title',
+					'desc'  => $fast
+						? __( 'Fast lookup is on: filters use WooCommerce Analytics\' indexed order data.', 'wc-search-orders-by-product' )
+						: __( 'Filters read order items directly. For faster filtering on large stores, import historical data in WooCommerce > Settings > Advanced > Features or Analytics > Settings.', 'wc-search-orders-by-product' ),
+					'id'    => 'sobp_settings_section',
+				),
+			);
+
+			$first = true;
+			foreach ( wc_search_orders_by_product()->filters->get_fields() as $field ) {
+				if ( empty( $field['setting'] ) ) {
+					continue;
+				}
+				$fields[] = array(
+					'title'         => $first ? __( 'Filters on the orders screen', 'wc-search-orders-by-product' ) : '',
+					'desc'          => $field['label'],
+					'id'            => 'sobp_settings[' . $field['setting'] . ']',
+					'type'          => 'checkbox',
+					'value'         => wc_search_orders_by_product_setting_enabled( $field['setting'], ! empty( $field['default'] ) ) ? 'yes' : 'no',
+					'checkboxgroup' => $first ? 'start' : '',
+				);
+				$first = false;
+			}
+
+			$fields[] = array(
+				'title' => __( 'Purchased items column', 'wc-search-orders-by-product' ),
+				'desc'  => __( 'Show the items of each order in the orders list', 'wc-search-orders-by-product' ),
+				'id'    => 'sobp_settings[purchased_items_column]',
+				'type'  => 'checkbox',
+				'value' => wc_search_orders_by_product_setting_enabled( 'purchased_items_column', true ) ? 'yes' : 'no',
+			);
+
+			$categories = array();
+			foreach ( get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ) as $term ) {
+				$categories[ $term->term_id ] = $term->name;
+			}
+			$fields[] = array(
+				'title'    => __( 'Categories in the filter', 'wc-search-orders-by-product' ),
+				'desc'     => __( 'Leave empty to list every category.', 'wc-search-orders-by-product' ),
+				'id'       => 'sobp_settings[category_include]',
+				'type'     => 'multiselect',
+				'class'    => 'wc-enhanced-select',
+				'options'  => $categories,
+				'value'    => array_map( 'strval', (array) ( wc_search_orders_by_product_settings()['category_include'] ?? array() ) ),
+				'desc_tip' => true,
+			);
+
+			$fields[] = array(
+				'type' => 'sectionend',
+				'id'   => 'sobp_settings_section',
+			);
+
+			/**
+			 * Fields of the plugin's WooCommerce settings section.
+			 *
+			 * @since 4.0
+			 * @param array $fields WooCommerce settings fields.
+			 */
+			return (array) apply_filters( 'wc_search_orders_by_product_settings_fields', $fields );
+		}
+
+		/**
 		 * Render settings page
 		 */
 		public function sobp_search_settings_page() {
@@ -286,21 +461,10 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 			jQuery(document).on('click', '.wpheka-save-changes', function() {
 				var element = jQuery(this);
 
-				var fd = new FormData(); // Currently empty
-
-				if(jQuery('input#search_orders_by_product_type').prop("checked") == true){
-					fd.append( 'search_orders_by_product_type', '1');
-				} else {
-					fd.append( 'search_orders_by_product_type', '0');
-				}
-
-				if(jQuery('input#search_orders_by_product_category').prop("checked") == true){
-					fd.append( 'search_orders_by_product_category', '1');
-				} else {
-					fd.append( 'search_orders_by_product_category', '0');
-				}
-
-				console.log(jQuery('#plugin-settings-form').serialize());  
+				var fd = new FormData();
+				jQuery('#plugin-settings-form input[type=checkbox]').each(function () {
+					fd.append(this.name, this.checked ? '1' : '0');
+				});
 
 				jQuery.ajax({
 					// A JS string, not HTML: esc_url() turned & into &#038;, the
