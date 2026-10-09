@@ -12,7 +12,7 @@ Filter your WooCommerce orders by product, variation, category, SKU, payment met
 == Description ==
 WC Search Orders By Product adds filters to the WooCommerce Orders screen so you can find the orders that contain a product. Start typing a product name in the product box and pick it from the list. The orders list then shows only the orders with that product, together with the status tabs, search and month filter you already use.
 
-= Filter orders by: =
+### 🔍 FILTER ORDERS BY
 
 * Product or a single variation (searched by name)
 * Product type
@@ -24,7 +24,7 @@ WC Search Orders By Product adds filters to the WooCommerce Orders screen so you
 
 Filters work together, so you can ask for "orders with this product, paid by cash on delivery, from Canada".
 
-= Also included =
+### ✨ ALSO INCLUDED
 
 * A "Purchased" column in the orders list showing the items of each order.
 * Fast on large stores. Filters are added to WooCommerce's own order query. When WooCommerce Analytics data is available its indexed tables are used. Tested with 100,000 orders.
