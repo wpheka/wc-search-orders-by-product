@@ -32,6 +32,7 @@ The main object, `wc_search_orders_by_product()`, exposes:
 | `wc_search_orders_by_product_category_terms_args` | filter | `array $args` | `wp_dropdown_categories()` arguments of the category filter. |
 | `wc_search_orders_by_product_product_types` | filter | `array $types` | Product types offered (slug => label). |
 | `wc_search_orders_by_product_lookup_available` | filter | `bool $available, string $storage` | Force product matching through WooCommerce's order product lookup table (`true`) or order item meta (`false`). |
+| `wc_search_orders_by_product_recent_limit` | filter | `int $limit` | Most orders changed since the lookup coverage check that are matched through a literal id list (default 2,000). Above it, that request matches through order item meta. Since 4.0.1. |
 
 **Keys of each `filter_fields` entry:**
 

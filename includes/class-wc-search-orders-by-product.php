@@ -147,8 +147,8 @@ final class WC_Search_Orders_By_Product
     /**
      * Tell add-ons the plugin is loaded.
      *
-     * wc_search_orders_by_product_loaded fires while this file is included,
-     * before most other plugins load, so add-ons should use this action.
+     * The wc_search_orders_by_product_loaded action fires while this file is
+     * included, before most other plugins load, so add-ons should use this one.
      *
      * @since 4.0
      */

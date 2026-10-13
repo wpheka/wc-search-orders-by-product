@@ -169,7 +169,7 @@ function wc_search_orders_by_product_setting_enabled($key, $default = false)
         return (bool) $default;
     }
 
-    return in_array($settings[$key], array(1, '1', 'yes', true), true);
+    return in_array($settings[$key], array( 1, '1', 'yes', true ), true);
 }
 
 /**
