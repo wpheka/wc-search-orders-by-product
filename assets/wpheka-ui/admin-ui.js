@@ -268,17 +268,22 @@
 		var prev = $( '[data-w-prev]', ui );
 		var next = $( '[data-w-next]', ui );
 		var dots = $( '[data-w-dots]', ui );
+		// Right to left, scrollLeft runs from 0 down to negative numbers.
+		function rtl() {
+			return 'rtl' === window.getComputedStyle( track ).direction;
+		}
 		function update() {
 			var max = track.scrollWidth - track.clientWidth - 2;
+			var pos = Math.abs( track.scrollLeft );
 			if ( prev ) {
-				prev.disabled = track.scrollLeft <= 2;
+				prev.disabled = pos <= 2;
 			}
 			if ( next ) {
-				next.disabled = track.scrollLeft >= max;
+				next.disabled = pos >= max;
 			}
 			if ( dots ) {
 				var n = Math.max( 1, Math.round( track.scrollWidth / track.clientWidth ) );
-				var at = max <= 0 ? 0 : Math.round( ( track.scrollLeft / max ) * ( n - 1 ) );
+				var at = max <= 0 ? 0 : Math.round( ( pos / max ) * ( n - 1 ) );
 				if ( dots.children.length !== n ) {
 					dots.innerHTML = new Array( n + 1 ).join( '<span></span>' );
 				}
@@ -289,7 +294,7 @@
 			}
 		}
 		function step( dir ) {
-			track.scrollBy( { left: dir * ( track.clientWidth + 16 ), behavior: 'smooth' } );
+			track.scrollBy( { left: ( rtl() ? -dir : dir ) * ( track.clientWidth + 16 ), behavior: 'smooth' } );
 		}
 		if ( prev ) {
 			prev.addEventListener( 'click', function () {
@@ -322,7 +327,8 @@
 				}
 				e.preventDefault();
 				target.remove();
-				window.fetch( a.href, { credentials: 'same-origin' } );
+				// keepalive: the request finishes even if the page is left straight away.
+				window.fetch( a.href, { credentials: 'same-origin', keepalive: true } );
 			} );
 		} );
 	}
