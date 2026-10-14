@@ -71,7 +71,7 @@ class WC_Search_Orders_By_Product_Admin {
 	 */
 	public static function plugin_action_links( $links ) {
 		$action_links = array(
-			'settings' => '<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=advanced&section=wc_search_orders_by_product' ) ) . '" aria-label="' . esc_attr__( 'View plugin settings', 'wc-search-orders-by-product' ) . '">' . esc_html__( 'Settings', 'wc-search-orders-by-product' ) . '</a>',
+			'settings' => '<a href="' . esc_url( WC_Search_Orders_By_Product_Settings_Page::url() ) . '" aria-label="' . esc_attr__( 'View plugin settings', 'wc-search-orders-by-product' ) . '">' . esc_html__( 'Settings', 'wc-search-orders-by-product' ) . '</a>',
 		);
 
 		return array_merge( $action_links, $links );

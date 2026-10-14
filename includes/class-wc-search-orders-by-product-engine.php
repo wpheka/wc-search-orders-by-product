@@ -41,11 +41,34 @@ final class WC_Search_Orders_By_Product_Engine {
 	const RECENT_SECONDS = HOUR_IN_SECONDS;
 
 	/**
+	 * Most recently changed orders put into a query as a literal id list. Above this (after
+	 * an import, a sync plugin or a bulk change) the request is decided through order item
+	 * meta instead: a list of 100,000 ids made the query larger than MySQL's default
+	 * max_allowed_packet (4 MB on MySQL 5.7).
+	 */
+	const RECENT_LIMIT = 2000;
+
+	/**
 	 * Source used by the last call to get_conditions(), for diagnostics.
 	 *
 	 * @var string
 	 */
 	public $last_source = '';
+
+	/**
+	 * Orders changed since the last coverage check, for the conditions being built.
+	 *
+	 * @var array
+	 */
+	private $recent_ids = array();
+
+	/**
+	 * Whether the last call to get_conditions() left the lookup table because too many
+	 * orders changed recently, for diagnostics.
+	 *
+	 * @var bool
+	 */
+	public $last_recent_overflow = false;
 
 	/**
 	 * Build the SQL conditions for a set of filter values.
@@ -54,10 +77,13 @@ final class WC_Search_Orders_By_Product_Engine {
 	 *                          payment_method, shipping_method, billing_country and sku (strings).
 	 * @param string $id_column Fully qualified order id column of the list query.
 	 * @param string $storage   'hpos' or 'posts'.
-	 * @return string[] Conditions to AND into the query's WHERE clause.
+	 * @return string[] Conditions to AND into the query's WHERE clause. The SKU condition is
+	 *                  under the key 'sku', so an add-on can find and replace it.
 	 */
 	public function get_conditions( array $values, $id_column, $storage ) {
-		$source            = $this->get_source( $storage );
+		// Read the recently changed orders once for this set of conditions, never from an earlier query.
+		$this->reset_recent();
+		$source            = $this->effective_source( $storage );
 		$this->last_source = $source;
 		$conditions        = array();
 
@@ -75,7 +101,7 @@ final class WC_Search_Orders_By_Product_Engine {
 		}
 
 		if ( isset( $values['sku'] ) && '' !== $values['sku'] ) {
-			$conditions[] = $this->product_condition( $this->products_by_sku( $values['sku'] ), $id_column, $storage, $source );
+			$conditions['sku'] = $this->product_condition( $this->products_by_sku( $values['sku'] ), $id_column, $storage, $source );
 		}
 
 		if ( ! empty( $values['payment_method'] ) ) {
@@ -171,9 +197,9 @@ final class WC_Search_Orders_By_Product_Engine {
 
 		// An entry without its check time cannot bound the recent window, so it is refreshed.
 		if ( ! is_array( $cached ) || ! isset( $cached[ $storage ] ) || empty( $cached[ $storage . '_at' ] ) ) {
-			$cached                      = is_array( $cached ) ? $cached : array();
-			$cached[ $storage . '_at' ]  = time();
-			$cached[ $storage ]          = $this->lookup_is_complete( $storage ) ? self::SOURCE_LOOKUP : self::SOURCE_ITEMS;
+			$cached                     = is_array( $cached ) ? $cached : array();
+			$cached[ $storage . '_at' ] = time();
+			$cached[ $storage ]         = $this->lookup_is_complete( $storage ) ? self::SOURCE_LOOKUP : self::SOURCE_ITEMS;
 			set_transient( self::COVERAGE_TRANSIENT, $cached, 12 * HOUR_IN_SECONDS );
 		}
 
@@ -187,6 +213,43 @@ final class WC_Search_Orders_By_Product_Engine {
 		$available = apply_filters( 'wc_search_orders_by_product_lookup_available', self::SOURCE_LOOKUP === $cached[ $storage ], $storage );
 
 		return $available ? self::SOURCE_LOOKUP : self::SOURCE_ITEMS;
+	}
+
+	/**
+	 * The source for this request: the lookup table only while the list of orders changed
+	 * since the coverage check is small enough to put into the query.
+	 *
+	 * @param string $storage 'hpos' or 'posts'.
+	 * @return string One of the SOURCE_ constants.
+	 */
+	public function effective_source( $storage ) {
+		$source                     = $this->get_source( $storage );
+		$this->last_recent_overflow = self::SOURCE_LOOKUP === $source && null === $this->recent_order_ids( $storage );
+
+		return $this->last_recent_overflow ? self::SOURCE_ITEMS : $source;
+	}
+
+	/**
+	 * How many recently changed orders may go into a query as a list.
+	 *
+	 * @return int
+	 */
+	public function recent_limit() {
+		/**
+		 * Most recently changed orders matched through a literal id list. Above it, the
+		 * request uses order item meta instead of the lookup table.
+		 *
+		 * @since 4.0.1
+		 * @param int $limit Default 2,000.
+		 */
+		return max( 1, (int) apply_filters( 'wc_search_orders_by_product_recent_limit', self::RECENT_LIMIT ) );
+	}
+
+	/**
+	 * Forget the recently changed orders read for an earlier set of conditions.
+	 */
+	public function reset_recent() {
+		$this->recent_ids = array();
 	}
 
 	/**
@@ -302,10 +365,10 @@ final class WC_Search_Orders_By_Product_Engine {
 		if ( $variations ) {
 			$items_or[] = "( m.meta_key = '_variation_id' AND m.meta_value IN ( " . $this->string_list( array_keys( $variations ) ) . ' ) )';
 		}
-		$items_sql = $this->items_sql( implode( ' OR ', $items_or ) );
+		$meta_clause = implode( ' OR ', $items_or );
 
 		if ( self::SOURCE_ITEMS === $source ) {
-			return "{$id_column} IN ( {$items_sql} )";
+			return "{$id_column} IN ( " . $this->items_sql( $meta_clause ) . ' )';
 		}
 
 		// Every branch constrains product_id first, so MySQL can use its index.
@@ -316,33 +379,78 @@ final class WC_Search_Orders_By_Product_Engine {
 		foreach ( $variations as $variation_id => $parent_id ) {
 			$lookup_or[] = '( l.product_id = ' . absint( $parent_id ) . ' AND l.variation_id = ' . absint( $variation_id ) . ' )';
 		}
-		$lookup_sql = "SELECT l.order_id FROM {$wpdb->prefix}wc_order_product_lookup l WHERE " . implode( ' OR ', $lookup_or );
+		$lookup_sql = "SELECT l.order_id FROM {$wpdb->prefix}wc_order_product_lookup l WHERE ( " . implode( ' OR ', $lookup_or ) . ' )';
 
-		return $this->with_recent( "{$id_column} IN ( {$lookup_sql} )", $items_sql, $id_column, $storage );
+		return $this->with_recent( $lookup_sql, $meta_clause, $id_column, $storage );
 	}
 
 	/**
-	 * Add orders changed since the last coverage check, matched through item meta, to a lookup condition.
+	 * A lookup table match where orders changed since the last coverage check are decided
+	 * by their order item meta instead.
 	 *
-	 * @param string $lookup_condition Condition built on the lookup table.
-	 * @param string $items_sql        The same match through order item meta.
-	 * @param string $id_column        Order id column.
-	 * @param string $storage          'hpos' or 'posts'.
+	 * WooCommerce refreshes the lookup table in the background, so for a recently changed
+	 * order it can still hold a line that was removed (or miss one that was added). Those
+	 * orders are left out of the lookup subquery and matched through item meta. Both lists
+	 * are literal ids: a subquery nested inside the lookup subquery would run once per row
+	 * on MySQL 5.7.
+	 *
+	 * Both lists hold at most recent_limit() ids: above it effective_source() has already
+	 * chosen order item meta for the whole request.
+	 *
+	 * @param string $lookup_sql  Subquery on the lookup table selecting order_id (alias `l`).
+	 * @param string $meta_clause The same match as a WHERE clause on order item meta (alias `m`).
+	 * @param string $id_column   Order id column.
+	 * @param string $storage     'hpos' or 'posts'.
 	 * @return string
 	 */
-	private function with_recent( $lookup_condition, $items_sql, $id_column, $storage ) {
+	private function with_recent( $lookup_sql, $meta_clause, $id_column, $storage ) {
 		global $wpdb;
 
-		$recent = $this->orders_table_sql( $storage, gmdate( 'Y-m-d H:i:s', $this->get_recent_cutoff( $storage ) ), '>=' );
+		$recent = $this->recent_order_ids( $storage );
+		if ( null === $recent ) {
+			// Too many to list (only when called without effective_source()): item meta decides.
+			return "{$id_column} IN ( " . $this->items_sql( $meta_clause ) . ' )';
+		}
+		if ( empty( $recent ) ) {
+			return "{$id_column} IN ( {$lookup_sql} )";
+		}
+		$recent_list = implode( ',', $recent );
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter -- built from constants, absint()ed ids and a prepared date.
-		$ids = array_map( 'absint', $wpdb->get_col( "SELECT DISTINCT x.order_id FROM ( {$items_sql} ) x INNER JOIN ( {$recent} ) r ON r.order_id = x.order_id" ) );
+		// The recent ids go inside the items subquery's own WHERE, so MySQL 5.7 does not
+		// first collect every order with the product.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter -- built from constants and absint()ed ids.
+		$ids = array_map( 'absint', $wpdb->get_col( $this->items_sql( $meta_clause, $recent ) ) );
 
+		$condition = "{$id_column} IN ( {$lookup_sql} AND l.order_id NOT IN ( {$recent_list} ) )";
 		if ( empty( $ids ) ) {
-			return $lookup_condition;
+			return $condition;
 		}
 
-		return "( {$lookup_condition} OR {$id_column} IN ( " . implode( ',', $ids ) . ' ) )';
+		return "( {$condition} OR {$id_column} IN ( " . implode( ',', $ids ) . ' ) )';
+	}
+
+	/**
+	 * Orders changed since the last coverage check, read once per set of conditions.
+	 *
+	 * At most recent_limit() + 1 ids are read: more than the limit means "too many to
+	 * list", whatever the real number is.
+	 *
+	 * @param string $storage 'hpos' or 'posts'.
+	 * @return int[]|null The ids, or null when there are more than recent_limit().
+	 */
+	public function recent_order_ids( $storage ) {
+		global $wpdb;
+
+		$cutoff = gmdate( 'Y-m-d H:i:s', $this->get_recent_cutoff( $storage ) );
+		$key    = $storage . '|' . $cutoff;
+		if ( ! array_key_exists( $key, $this->recent_ids ) ) {
+			$limit = $this->recent_limit();
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter -- prepared in orders_table_sql(); the limit is an integer.
+			$ids              = array_map( 'absint', $wpdb->get_col( $this->orders_table_sql( $storage, $cutoff, '>=' ) . ' LIMIT ' . ( $limit + 1 ) ) );
+			$this->recent_ids = array( $key => count( $ids ) > $limit ? null : $ids );
+		}
+
+		return $this->recent_ids[ $key ];
 	}
 
 	/**
@@ -354,17 +462,20 @@ final class WC_Search_Orders_By_Product_Engine {
 	 * category), and the derived table makes it build the order list once
 	 * rather than re-checking it for each order.
 	 *
-	 * @param string $meta_clause WHERE clause on the itemmeta alias `m`.
+	 * @param string     $meta_clause WHERE clause on the itemmeta alias `m`.
+	 * @param int[]|null $order_ids   Only these orders, when given.
 	 * @return string
 	 */
-	private function items_sql( $meta_clause ) {
+	private function items_sql( $meta_clause, $order_ids = null ) {
 		global $wpdb;
+
+		$only = is_array( $order_ids ) ? ' AND i.order_id IN ( ' . ( $order_ids ? implode( ',', array_map( 'absint', $order_ids ) ) : '0' ) . ' )' : '';
 
 		return "SELECT sobp_items.order_id FROM (
 			SELECT DISTINCT i.order_id
 			FROM {$wpdb->prefix}woocommerce_order_itemmeta m
 			STRAIGHT_JOIN {$wpdb->prefix}woocommerce_order_items i ON i.order_item_id = m.order_item_id
-			WHERE i.order_item_type = 'line_item' AND ( {$meta_clause} )
+			WHERE i.order_item_type = 'line_item' AND ( {$meta_clause} ){$only}
 		) sobp_items";
 	}
 

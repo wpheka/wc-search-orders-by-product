@@ -17,6 +17,10 @@ const LIST = STORE === 'hpos' ? `${A}admin.php?page=wc-orders` : `${A}edit.php?p
 const ST = STORE === 'hpos' ? 'status' : 'post_status';
 const MINE = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6'].map(k => ids[k]);
 const name = s => `${STORE}: ${s}`;
+// A crash must show as a failure, never as cases that silently did not run.
+const crashed = e => { record(false, name('browser cases ran to the end'), (e && e.message || String(e)).split('\n')[0]); process.exit(1); };
+process.on('unhandledRejection', crashed);
+process.on('uncaughtException', crashed);
 
 (async () => {
   const browser = await chromium.launch();
@@ -116,32 +120,141 @@ const name = s => `${STORE}: ${s}`;
       record(count >= 3, 'hpos: filtering on the HPOS screen counts towards the review prompt', `counter ${count}`);
     } catch (e) { record(false, 'hpos: review counter', e.message.split('\n')[0]); }
 
-    // WooCommerce > Settings > Advanced section: switch the SKU filter off and on.
+    // Settings page (WPHEKA > Search Orders, 4.1.0). Fields are found by name: the kit gives
+    // controls generated ids. Saving is a plain form post that redirects back with w-saved=1.
+    const SETTINGS = `${A}admin.php?page=wc-search-orders-by-product-settings`;
+    const sw = key => `input[type="checkbox"][name="sobp_settings[${key}]"]`;
+    const openSettings = async p => {
+      const resp = await p.goto(SETTINGS, { waitUntil: 'domcontentloaded' });
+      await p.waitForSelector('form#sobp-settings');
+      return resp;
+    };
+    // Returns the URL the save redirected to: the page's script removes w-saved=1 from the
+    // address bar once the toast shows, so p.url() after load no longer has it.
+    const saveSettings = async p => {
+      const [resp] = await Promise.all([p.waitForNavigation({ waitUntil: 'load' }), p.evaluate(() => document.getElementById('sobp-settings').requestSubmit())]);
+      return resp ? resp.url() : p.url();
+    };
+    const stored = () => JSON.parse(php('settings.php'));
+
+    // The old WooCommerce > Settings > Advanced section is now only a link to the page.
     try {
-      const wcs = `${A}admin.php?page=wc-settings&tab=advanced&section=wc_search_orders_by_product`;
-      const box = '#sobp_settings\\[search_orders_by_sku\\]';
-      const saveWc = async checked => {
-        await page.goto(wcs, { waitUntil: 'domcontentloaded' });
-        await page.waitForSelector(box);
-        await page.locator(box).setChecked(checked, { force: true });
-        // A DOM click: Playwright's own click waits for something overlaying
-        // the button on the second visit and never clicks it.
-        await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.evaluate(() => document.querySelector('button[name="save"]').click())]);
-      };
-      await saveWc(false);
-      const storedOff = JSON.parse(php('settings.php')).search_orders_by_sku;
+      const resp = await page.goto(`${A}admin.php?page=wc-settings&tab=advanced&section=wc_search_orders_by_product`, { waitUntil: 'domcontentloaded' });
+      const link = await page.locator('a.button-primary[href*="page=wc-search-orders-by-product-settings"]').count();
+      const fields = await page.locator('[name^="sobp_settings"]').count();
+      const text = await page.locator('#mainform').innerText();
+      record(resp.status() === 200 && link === 1 && fields === 0 && /settings have moved/.test(text), 'hpos: the old WooCommerce settings section links to the new page', `status ${resp.status()}, link ${link}, fields ${fields}`);
+    } catch (e) { record(false, 'hpos: old WooCommerce settings section', e.message.split('\n')[0]); }
+
+    // The page shows every field: Product (always on), the six filter switches, the
+    // category picker, the items column and the fast lookup row.
+    try {
+      const resp = await openSettings(page);
+      const keys = ['search_orders_by_product_type', 'search_orders_by_product_category', 'search_orders_by_sku', 'search_orders_by_payment_method', 'search_orders_by_shipping_method', 'search_orders_by_billing_country', 'purchased_items_column'];
+      const counts = [];
+      for (const k of keys) counts.push(await page.locator(sw(k)).count());
+      const always = await page.locator('#filters .w-row', { hasText: 'Always on' }).count();
+      const cats = await page.locator('input[name="sobp_settings[category_include][]"][type="checkbox"]').count();
+      const catA = await page.locator(`input[name="sobp_settings[category_include][]"][value="${ids.cat_a}"]`).count();
+      const child = await page.locator('.w-chip', { hasText: 'ZZ SOBP Cat B › ZZ SOBP Cat B Child' }).count();
+      const fast = await page.locator('#performance .w-row', { hasText: 'Fast lookup' }).count();
+      const html = await page.content();
+      record(resp.status() === 200 && counts.every(c => c === 1) && always === 1 && cats >= 3 && catA === 1 && child === 1 && fast === 1 && !/Fatal error|Warning<\/b>|Notice<\/b>|critical error/i.test(html),
+        'hpos: the settings page shows every field', `status ${resp.status()}, switches ${JSON.stringify(counts)}, always ${always}, categories ${cats} (A ${catA}, child label ${child}), fast ${fast}`);
+    } catch (e) { record(false, 'hpos: settings page fields', e.message.split('\n')[0]); }
+
+    // Switch the SKU filter off and on (the case the WooCommerce section covered).
+    try {
+      await openSettings(page);
+      await page.locator(sw('search_orders_by_sku')).setChecked(false, { force: true });
+      const url = await saveSettings(page);
+      const toast = await page.locator('.w-toast.is-shown').count();
+      const storedOff = stored().search_orders_by_sku;
       await page.goto(LIST, { waitUntil: 'domcontentloaded' });
       const off = await page.locator('#search_sku').count();
-      await saveWc(true);
-      const storedOn = JSON.parse(php('settings.php')).search_orders_by_sku;
+      await openSettings(page);
+      const shownOff = await page.locator(sw('search_orders_by_sku')).isChecked();
+      await page.locator(sw('search_orders_by_sku')).setChecked(true, { force: true });
+      await saveSettings(page);
+      const storedOn = stored().search_orders_by_sku;
       await page.goto(LIST, { waitUntil: 'domcontentloaded' });
       const on = await page.locator('#search_sku').count();
-      record(storedOff === 'no' && off === 0 && storedOn === 'yes' && on === 1, 'hpos: WooCommerce settings section switches the SKU filter off and on', `stored ${storedOff}/${storedOn}, box ${off}/${on}`);
-    } catch (e) { record(false, 'hpos: WooCommerce settings section', e.message.split('\n')[0]); }
+      record(/w-saved=1/.test(url) && toast === 1 && storedOff === 'no' && off === 0 && shownOff === false && storedOn === 'yes' && on === 1,
+        'hpos: Settings switch the SKU filter off and on', `redirect ${url.replace(A, '')}, toast ${toast}, stored ${storedOff}/${storedOn}, box ${off}/${on}, shown off ${shownOff}`);
+    } catch (e) { record(false, 'hpos: Settings SKU switch', e.message.split('\n')[0]); }
+
+    // Switch the category filter off, then back on (the case the old WPHEKA page covered).
+    try {
+      await openSettings(page);
+      await page.locator(sw('search_orders_by_product_category')).setChecked(false, { force: true });
+      const hidden = await page.locator('#sobp-category-rows.is-off').count();
+      await saveSettings(page);
+      const storedOff = stored().search_orders_by_product_category;
+      await page.goto(LIST, { waitUntil: 'domcontentloaded' });
+      const off = await page.locator('select.dropdown_product_cat').count();
+      await openSettings(page);
+      await page.locator(sw('search_orders_by_product_category')).setChecked(true, { force: true });
+      await saveSettings(page);
+      await page.goto(LIST, { waitUntil: 'domcontentloaded' });
+      const on = await page.locator('select.dropdown_product_cat').count();
+      record(hidden === 1 && storedOff === 'no' && off === 0 && on === 1, 'hpos: Settings switch the category filter off and on again', `picker hidden ${hidden}, stored ${storedOff}, dropdown off ${off} on ${on}`);
+    } catch (e) { record(false, 'hpos: Settings category switch', e.message.split('\n')[0]); }
+
+    // The category picker: list only category A, then every category again. An add-on's
+    // key in the option survives both saves.
+    try {
+      php('settings-set.php', 'zz_addon_key', '"kept"');
+      await openSettings(page);
+      await page.locator('[data-w-chipfind]').fill('ZZ SOBP Cat A');
+      const visible = await page.locator('#category-filter .w-chip:visible').count();
+      const bar = await page.locator('.w-savebar.is-shown').count();
+      await page.locator(`input[name="sobp_settings[category_include][]"][value="${ids.cat_a}"]`).setChecked(true, { force: true });
+      await saveSettings(page);
+      const one = stored();
+      await page.goto(LIST, { waitUntil: 'domcontentloaded' });
+      const listed = await page.$$eval('select.dropdown_product_cat option', os => os.map(o => o.value).filter(Boolean));
+      const statCats = await (async () => { await openSettings(page); return (await page.locator('.w-stat', { hasText: 'Categories listed' }).locator('.w-stat-value').innerText()).trim(); })();
+      await page.locator(`input[name="sobp_settings[category_include][]"][value="${ids.cat_a}"]`).setChecked(false, { force: true });
+      await saveSettings(page);
+      const all = stored();
+      record(visible === 1 && bar === 0 && JSON.stringify(one.category_include) === JSON.stringify([ids.cat_a]) && listed.length === 1 && statCats === '1'
+        && Array.isArray(all.category_include) && all.category_include.length === 0 && one.zz_addon_key === 'kept' && all.zz_addon_key === 'kept',
+        'hpos: Settings category picker lists one category, then all, and keeps add-on keys',
+        `search shows ${visible}, save bar on search ${bar}, stored ${JSON.stringify(one.category_include)} then ${JSON.stringify(all.category_include)}, dropdown ${JSON.stringify(listed)}, stat ${statCats}, add-on ${one.zz_addon_key}/${all.zz_addon_key}`);
+    } catch (e) { record(false, 'hpos: Settings category picker', e.message.split('\n')[0]); }
+    php('settings-set.php', 'zz_addon_key', 'unset');
+    php('settings-set.php', 'category_include', '[]');
     // Whatever happened above, the later cases need every filter on.
     php('enable-all.php');
 
-    // A shop manager can filter orders and reach the settings section.
+    // Stats and the Help tab.
+    try {
+      await openSettings(page);
+      const filtersOn = (await page.locator('.w-stat', { hasText: 'Filters on' }).locator('.w-stat-value').innerText()).replace(/\s+/g, ' ').trim();
+      const source = await page.locator('.w-stat', { hasText: 'Data source' }).locator('.w-stat-value').innerText();
+      const orders = (await page.locator('.w-stat', { hasText: 'Orders on the store' }).locator('.w-stat-value').innerText()).replace(/\D/g, '');
+      const help = await page.goto(`${SETTINGS}&tab=help`, { waitUntil: 'domcontentloaded' });
+      const cards = await page.locator('.w-flow .w-flow-step').count();
+      record(filtersOn === '7 of 7' && /Fast|Direct/.test(source) && parseInt(orders, 10) >= 6 && help.status() === 200 && cards === 4,
+        'hpos: stats show real numbers and the Help tab opens', `filters ${filtersOn}, source ${source}, orders ${orders}, help ${help.status()} with ${cards} cards`);
+    } catch (e) { record(false, 'hpos: stats and Help', e.message.split('\n')[0]); }
+
+    // A save without a valid nonce is refused and changes nothing.
+    try {
+      const before = php('settings.php');
+      const r = await page.request.post(`${A}admin-post.php`, { form: { action: 'wc_search_orders_by_product_save_settings', _wpnonce: 'nope', 'sobp_settings[search_orders_by_sku]': 'no' }, maxRedirects: 0 });
+      const after = php('settings.php');
+      record(r.status() === 403 && before === after, 'hpos: a settings save without a valid nonce is refused', `status ${r.status()}, changed ${before !== after}`);
+    } catch (e) { record(false, 'hpos: settings nonce', e.message.split('\n')[0]); }
+
+    // The plugins screen Settings link opens the page.
+    try {
+      await page.goto(`${A}plugins.php`, { waitUntil: 'domcontentloaded' });
+      const href = await page.locator('tr[data-plugin="wc-search-orders-by-product/wc-search-orders-by-product.php"] .settings a').getAttribute('href');
+      record(/page=wc-search-orders-by-product-settings/.test(href || ''), 'hpos: the plugins screen Settings link opens the settings page', `href ${href}`);
+    } catch (e) { record(false, 'hpos: Settings link', e.message.split('\n')[0]); }
+
+    // A shop manager can filter orders, sees WPHEKA > Search Orders and can save settings.
     try {
       const mctx = await browser.newContext({ viewport: { width: 1400, height: 1200 } });
       await mctx.addCookies(ids.manager_cookies);
@@ -149,43 +262,15 @@ const name = s => `${STORE}: ${s}`;
       await mp.goto(`${LIST}&product_id=${ids.A}`, { waitUntil: 'domcontentloaded' });
       const listed = await mp.$$eval('#the-list tr[id]', trs => trs.map(t => parseInt(t.id.replace(/\D/g, ''), 10)));
       const filtered = JSON.stringify(listed.sort((a, b) => a - b)) === JSON.stringify(want(['o1', 'o3']));
-      const resp = await mp.goto(`${A}admin.php?page=wc-settings&tab=advanced&section=wc_search_orders_by_product`, { waitUntil: 'domcontentloaded' });
-      const field = await mp.locator('#sobp_settings\\[search_orders_by_sku\\]').count();
-      record(filtered && resp.status() === 200 && field === 1, 'hpos: a shop manager can filter orders and open the settings section', `filtered ${JSON.stringify(listed)}, settings ${resp.status()}, field ${field}`);
+      const menu = await mp.locator('#adminmenu a[href*="page=wc-search-orders-by-product-settings"]').count();
+      const resp = await openSettings(mp);
+      await mp.locator(sw('search_orders_by_billing_country')).setChecked(false, { force: true });
+      await saveSettings(mp);
+      const saved = stored().search_orders_by_billing_country;
+      php('enable-all.php');
+      record(filtered && menu >= 1 && resp.status() === 200 && saved === 'no', 'hpos: a shop manager can filter orders, find the page in the menu and save settings', `filtered ${JSON.stringify(listed)}, menu links ${menu}, page ${resp.status()}, saved ${saved}`);
       await mctx.close();
-    } catch (e) { record(false, 'hpos: shop manager', e.message.split('\n')[0]); }
-
-    // Settings: switch the category filter off, then back on.
-    try {
-      const settings = `${A}admin.php?page=wc-search-orders-by-product-settings`;
-      await page.goto(settings, { waitUntil: 'domcontentloaded' });
-      const save = async () => {
-        const resp = page.waitForResponse(r => r.request().method() === 'POST' && r.url().includes('save_sobp_plugin_data'));
-        // A successful save reloads the page; wait for that reload to finish so
-        // the next step does not race it.
-        const reloaded = page.waitForNavigation({ waitUntil: 'load' });
-        await page.locator('.wpheka-save-changes').click();
-        const r = await resp;
-        if (r.status() === 200) await reloaded;
-        return String(r.status());
-      };
-      await page.waitForSelector('#search_orders_by_product_category');
-      const before = await page.locator('#search_orders_by_product_category').isChecked();
-      await page.locator('#search_orders_by_product_category').setChecked(false, { force: true });
-      const checkedNow = await page.locator('#search_orders_by_product_category').isChecked();
-      const reply = await save();
-      const stored = php('settings.php');
-      await page.goto(LIST, { waitUntil: 'domcontentloaded' });
-      const off = await page.locator('select.dropdown_product_cat').count();
-      const storedOff = JSON.parse(stored).search_orders_by_product_category;
-      await page.goto(settings, { waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('#search_orders_by_product_category');
-      await page.locator('#search_orders_by_product_category').setChecked(true, { force: true });
-      await save();
-      await page.goto(LIST, { waitUntil: 'domcontentloaded' });
-      const on = await page.locator('select.dropdown_product_cat').count();
-      record(reply.startsWith('200') && ['0', 'no'].includes(String(storedOff)) && off === 0 && on === 1, 'hpos: Settings save, and switch the category filter off and on again', `save reply ${reply}, stored ${stored}, dropdown off ${off} on ${on}`);
-    } catch (e) { record(false, 'hpos: Settings page saves', e.message.split('\n')[0]); }
+    } catch (e) { record(false, 'hpos: shop manager', e.message.split('\n')[0]); php('enable-all.php'); }
 
     // Review prompt, on a fresh page so nothing from the Settings step is still loading.
     await page.close();
@@ -213,7 +298,11 @@ const name = s => `${STORE}: ${s}`;
         'hpos: review prompt "Don\'t ask again" hides it for good', 'still shown');
     } catch (e) { record(false, 'hpos: review prompt Don\'t ask again', e.message.split('\n')[0]); }
   }
-  const real = errors.filter(e => !/Transition was skipped/.test(e));
+  record(true, name('browser cases ran to the end'), '');
+  // WooCommerce PayPal Payments throws React error #299 from its own settings
+  // script on every WooCommerce settings page of this site, General included
+  // (checked 2026-10-07), so it says nothing about this plugin.
+  const real = errors.filter(e => !/Transition was skipped/.test(e) && !/woocommerce-paypal-payments\/assets\/ppcp-settings/.test(e));
   record(real.length === 0, name('no JavaScript errors on these screens'), JSON.stringify(real));
   await browser.close();
 })();

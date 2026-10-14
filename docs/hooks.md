@@ -32,6 +32,7 @@ The main object, `wc_search_orders_by_product()`, exposes:
 | `wc_search_orders_by_product_category_terms_args` | filter | `array $args` | `wp_dropdown_categories()` arguments of the category filter. |
 | `wc_search_orders_by_product_product_types` | filter | `array $types` | Product types offered (slug => label). |
 | `wc_search_orders_by_product_lookup_available` | filter | `bool $available, string $storage` | Force product matching through WooCommerce's order product lookup table (`true`) or order item meta (`false`). |
+| `wc_search_orders_by_product_recent_limit` | filter | `int $limit` | Most orders changed since the lookup coverage check that are matched through a literal id list (default 2,000). Above it, that request matches through order item meta. Since 4.0.1. |
 
 **Keys of each `filter_fields` entry:**
 
@@ -51,9 +52,13 @@ The main object, `wc_search_orders_by_product()`, exposes:
 
 | Hook | Type | Arguments | Use |
 |---|---|---|---|
-| `wc_search_orders_by_product_settings_fields` | filter | `array $fields` | Fields of the WooCommerce > Settings > Advanced > Search orders by product section. |
-| `wc_search_orders_by_product_settings_after_fields` | action | `array $settings` | Markup after the switches on the WPHEKA settings page. |
+| `wc_search_orders_by_product_settings_sections` | action | `array $settings` | Since 4.1.0. Print your own sections on the WPHEKA > Search Orders Settings tab, inside its form. Build them with the bundled kit, `WC_Search_Orders_By_Product\AdminUI\Fields` (`section_start()`, `switch_row()`, `info_row()`, `section_end()` and the rest), so they match the page. |
+| `wc_search_orders_by_product_settings_nav` | filter | `array $nav` | Since 4.1.0. Links in the Settings tab's section nav, each `[ section id, icon name, label ]`. Add one for each section you print. |
+| `wc_search_orders_by_product_settings_after_fields` | action | `array $settings` | Markup at the end of the Orders list card on the settings page. |
+| `wc_search_orders_by_product_settings_fields` | filter | `array $fields` | Removed in 4.1.0. The WooCommerce > Settings > Advanced section now only links to the settings page, so this no longer runs. Use the two hooks above. |
 | `wc_search_orders_by_product_sanitize_settings` | filter | `array $settings, array $raw` | Settings about to be saved from a settings form. Add-on keys must be added here, or they are dropped. |
 | `wc_search_orders_by_product_capability` | filter | `string $capability` | Capability for the filters (`edit_shop_orders`) and the settings (`manage_woocommerce`). |
+
+Fields named `sobp_settings[key]` in your section are saved with the page, once you add `key` on `wc_search_orders_by_product_sanitize_settings`. A control that posts somewhere else (a licence key, a button that starts a job) needs its own form: print it on `admin_footer` and join your fields to it with the `form=""` attribute, because forms cannot nest.
 
 All settings are stored in the `sobp_settings` option. Switches are stored as `yes` or `no`. Read them with `wc_search_orders_by_product_setting_enabled( $key, $default )`.

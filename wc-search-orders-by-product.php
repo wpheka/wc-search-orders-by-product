@@ -5,13 +5,13 @@
  * Description: The <code><strong>WC Search Orders By Product</strong></code> plugin helps you search your WooCommerce orders by product name, type and category.
  * Author: WPHEKA
  * Author URI: https://www.wpheka.com/
- * Version: 4.0
+ * Version: 4.1.0
  * Requires at least: 6.5
  * Requires PHP: 8.1
  * Tested up to: 7.1.3
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 11.1.2
+ * WC tested up to: 11.2.1
  * Text Domain: wc-search-orders-by-product
  * Domain Path: /languages
  * License: GPLv3 or later
@@ -169,7 +169,7 @@ function wc_search_orders_by_product_setting_enabled($key, $default = false)
         return (bool) $default;
     }
 
-    return in_array($settings[$key], array(1, '1', 'yes', true), true);
+    return in_array($settings[$key], array( 1, '1', 'yes', true ), true);
 }
 
 /**

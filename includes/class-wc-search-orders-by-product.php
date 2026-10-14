@@ -147,8 +147,8 @@ final class WC_Search_Orders_By_Product
     /**
      * Tell add-ons the plugin is loaded.
      *
-     * wc_search_orders_by_product_loaded fires while this file is included,
-     * before most other plugins load, so add-ons should use this action.
+     * The wc_search_orders_by_product_loaded action fires while this file is
+     * included, before most other plugins load, so add-ons should use this one.
      *
      * @since 4.0
      */
@@ -259,16 +259,14 @@ final class WC_Search_Orders_By_Product
         $this->engine  = new WC_Search_Orders_By_Product_Engine();
         $this->filters = new WC_Search_Orders_By_Product_Filters();
 
-        // Include ajax class.
-        if ($this->is_request('ajax')) {
-            include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/class-wc-search-orders-by-product-admin-ajax.php';
-        }
-
         // Include admin class.
         if ($this->is_request('admin')) {
             include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/class-wc-search-orders-by-product-admin.php';
             $this->admin = new WC_Search_Orders_By_Product_Admin($this->filters, $this->engine);
             include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php';
+            include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/wpheka-ui/load.php';
+            include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/class-wc-search-orders-by-product-settings-page.php';
+            WC_Search_Orders_By_Product_Settings_Page::init();
             include_once WC_SEARCH_ORDERS_BY_PRODUCT_PLUGIN_ABSPATH . 'includes/admin/class-wc-search-orders-by-product-deactivation-popup.php';
         }
     }
