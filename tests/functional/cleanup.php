@@ -38,6 +38,7 @@ foreach ( array( 'admin', 'manager' ) as $key ) {
 	wp_delete_user( $ids[ $key ] );
 }
 delete_transient( 'wc_search_orders_by_product_lookup_coverage' );
+delete_transient( 'wc_search_orders_by_product_order_count' );
 foreach ( array( 'settings' => 'sobp_settings', 'search_count' => 'sobp_filtered_search_count' ) as $key => $option ) {
 	if ( '__unset__' === ( $ids[ $key ] ?? '__unset__' ) ) {
 		delete_option( $option );

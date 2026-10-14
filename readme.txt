@@ -3,7 +3,7 @@ Contributors: akshayaswaroop, wpheka
 Tags: search orders, woocommerce, order, product, filter
 Requires at least: 6.5
 Tested up to: 7.1.3
-Stable tag: 4.0
+Stable tag: 4.1.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
@@ -41,21 +41,21 @@ Filters work together, so you can ask for "orders with this product, paid by cas
 1. Install the plugin through the WordPress plugins screen or upload the plugin folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the Plugins screen.
 3. Go to WooCommerce > Orders. The product, product type and category filters are shown straight away.
-4. To switch other filters or the Purchased column on or off, go to WooCommerce > Settings > Advanced > Search orders by product.
+4. To switch other filters or the Purchased column on or off, go to WPHEKA > Search Orders.
 
 == Frequently Asked Questions ==
 
 = Why are some filters not shown? =
-SKU, payment method, shipping method and country filters are off until you switch them on in WooCommerce > Settings > Advanced > Search orders by product.
+SKU, payment method, shipping method and country filters are off until you switch them on under WPHEKA > Search Orders.
 
 = Does the SKU filter find renamed SKUs? =
 It matches each product's current SKU, because WooCommerce does not save the SKU on the order. If you change a product's SKU, search by its new SKU.
 
 = Is it fast on a store with many orders? =
-Yes. Filters run inside WooCommerce's own order query instead of loading every order first. If WooCommerce Analytics has imported your order history, the plugin uses its indexed tables and the settings section says "Fast lookup is on".
+Yes. Filters run inside WooCommerce's own order query instead of loading every order first. If WooCommerce Analytics has imported your order history, the plugin uses its indexed tables and its settings page shows Fast lookup as On.
 
 = Can shop managers use it? =
-Yes. Anyone who can manage orders can use the filters. Shop managers can also change the settings under WooCommerce > Settings.
+Yes. Anyone who can manage orders can use the filters. Shop managers can also change the settings under WPHEKA > Search Orders.
 
 = Does the plugin send any data? =
 Only if you choose to. When you deactivate the plugin you can send an optional feedback form, which sends your reason, site address and email address (if you enter one) to wpheka.com. Nothing is sent unless you submit that form.
@@ -65,10 +65,20 @@ Only if you choose to. When you deactivate the plugin you can send an optional f
 1. The orders screen with the product, type, category, payment, shipping, country and SKU filters and the Purchased column.
 2. Orders filtered by the start of a SKU, here every variation of one product.
 3. Orders filtered by a category (sub-categories included) and a billing country.
-4. Settings under WooCommerce > Settings > Advanced > Search orders by product.
-5. The plugin's settings page under WPHEKA.
+4. The settings page under WPHEKA > Search Orders: the filters to show, and the categories the category filter lists.
 
 == Changelog ==
+
+= 4.1.0 - 2026-10-14 =
+* Enhancement - Settings moved to one new page under WPHEKA > Search Orders, in the same design as our other plugins. Every option is there, including the categories the category filter lists, with a search box for stores with many categories. Your settings are kept as they are.
+* Enhancement - The settings page shows which filters are on, whether fast lookup is in use and how many orders the store has, with a short getting-started list.
+* Enhancement - WooCommerce > Settings > Advanced > Search orders by product now links to the new page.
+* Enhancement - Shop managers find the page in the WPHEKA menu.
+* Enhancement - Settings save with a normal form, so they also save with JavaScript off.
+* Fix - A line removed from an order no longer matches a filter through out-of-date WooCommerce Analytics data.
+* Fix - Filtering stays fast when many orders changed since the last check.
+* Dev - New hooks wc_search_orders_by_product_settings_sections and wc_search_orders_by_product_settings_nav add sections to the settings page. The wc_search_orders_by_product_settings_fields filter no longer runs, as the WooCommerce section has no fields.
+* Enhancement - WooCommerce 11.2.1 compatibility.
 
 = 4.0 - 2026-10-07 =
 * Feature - New filters: SKU, payment method, shipping method and billing country. Switch them on in WooCommerce > Settings > Advanced > Search orders by product.

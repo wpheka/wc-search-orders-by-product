@@ -20,6 +20,9 @@ $ids = array(
 	'search_count' => get_option( 'sobp_filtered_search_count', '__unset__' ),
 );
 
+// The settings page caches the order count; the test orders must be in it.
+delete_transient( 'wc_search_orders_by_product_order_count' );
+
 $cat_a = wp_insert_term( 'ZZ SOBP Cat A', 'product_cat' );
 $cat_b = wp_insert_term( 'ZZ SOBP Cat B', 'product_cat' );
 $ids['cat_a'] = $cat_a['term_id'];
