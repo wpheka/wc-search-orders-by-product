@@ -289,6 +289,9 @@ if ( ! class_exists( 'WC_Search_Orders_By_Product_Admin_Settings', false ) ) :
 				return $settings;
 			}
 
+			// Nothing to save here, so WooCommerce's Save button would only show disabled.
+			$GLOBALS['hide_save_button'] = true; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WooCommerce's own switch for its Save button; the name is WooCommerce's.
+
 			return array(
 				array(
 					'title' => __( 'Search Orders By Product settings have moved', 'wc-search-orders-by-product' ),

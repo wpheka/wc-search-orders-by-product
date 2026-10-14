@@ -143,7 +143,8 @@ process.on('uncaughtException', crashed);
       const link = await page.locator('a.button-primary[href*="page=wc-search-orders-by-product-settings"]').count();
       const fields = await page.locator('[name^="sobp_settings"]').count();
       const text = await page.locator('#mainform').innerText();
-      record(resp.status() === 200 && link === 1 && fields === 0 && /settings have moved/.test(text), 'hpos: the old WooCommerce settings section links to the new page', `status ${resp.status()}, link ${link}, fields ${fields}`);
+      const saveBtn = await page.locator('#mainform button[name="save"]').count();
+      record(resp.status() === 200 && link === 1 && fields === 0 && saveBtn === 0 && /settings have moved/.test(text), 'hpos: the old WooCommerce settings section links to the new page, with no Save button', `status ${resp.status()}, link ${link}, fields ${fields}, save button ${saveBtn}`);
     } catch (e) { record(false, 'hpos: old WooCommerce settings section', e.message.split('\n')[0]); }
 
     // The page shows every field: Product (always on), the six filter switches, the

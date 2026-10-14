@@ -3,7 +3,7 @@ Contributors: akshayaswaroop, wpheka
 Tags: search orders, woocommerce, order, product, filter
 Requires at least: 6.5
 Tested up to: 7.1.3
-Stable tag: 4.1.0
+Stable tag: 4.1.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
@@ -68,6 +68,11 @@ Only if you choose to. When you deactivate the plugin you can send an optional f
 4. The settings page under WPHEKA > Search Orders: the filters to show, and the categories the category filter lists.
 
 == Changelog ==
+
+= 4.1.1 - 2026-10-14 =
+* Fix - On sites in a right-to-left language (such as Arabic or Hebrew) the settings page sat 20px off the edge of the window and scrolled sideways. The page now mirrors fully.
+* Fix - Keyboard focus now shows a ring on every control of the settings page.
+* The old WooCommerce > Settings > Advanced > Search orders by product section no longer shows an unused Save button.
 
 = 4.1.0 - 2026-10-14 =
 * Enhancement - Settings moved to one new page under WPHEKA > Search Orders, in the same design as our other plugins. Every option is there, including the categories the category filter lists, with a search box for stores with many categories. Your settings are kept as they are.
