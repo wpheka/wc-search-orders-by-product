@@ -236,7 +236,8 @@ process.on('uncaughtException', crashed);
       const orders = (await page.locator('.w-stat', { hasText: 'Orders on the store' }).locator('.w-stat-value').innerText()).replace(/\D/g, '');
       const help = await page.goto(`${SETTINGS}&tab=help`, { waitUntil: 'domcontentloaded' });
       const cards = await page.locator('.w-flow .w-flow-step').count();
-      record(filtersOn === '7 of 7' && /Fast|Direct/.test(source) && parseInt(orders, 10) >= 6 && help.status() === 200 && cards === 4,
+      // Setup makes 6 orders and trashes one, which the card rightly leaves out: at least 5.
+      record(filtersOn === '7 of 7' && /Fast|Direct/.test(source) && parseInt(orders, 10) >= 5 && help.status() === 200 && cards === 4,
         'hpos: stats show real numbers and the Help tab opens', `filters ${filtersOn}, source ${source}, orders ${orders}, help ${help.status()} with ${cards} cards`);
     } catch (e) { record(false, 'hpos: stats and Help', e.message.split('\n')[0]); }
 

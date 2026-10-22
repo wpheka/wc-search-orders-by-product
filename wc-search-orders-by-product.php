@@ -10,7 +10,7 @@
  * Requires PHP: 8.1
  * Tested up to: 7.1.3
  * Requires Plugins: woocommerce
- * WC requires at least: 3.0
+ * WC requires at least: 7.1
  * WC tested up to: 11.2.1
  * Text Domain: wc-search-orders-by-product
  * Domain Path: /languages
