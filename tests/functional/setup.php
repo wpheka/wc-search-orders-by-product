@@ -124,6 +124,20 @@ $ids['manager_cookies'] = array(
 	array( 'name' => AUTH_COOKIE, 'value' => wp_generate_auth_cookie( $mid, $exp, 'auth' ), 'domain' => 'localhost', 'path' => wp_parse_url( admin_url(), PHP_URL_PATH ) ),
 	array( 'name' => LOGGED_IN_COOKIE, 'value' => wp_generate_auth_cookie( $mid, $exp, 'logged_in' ), 'domain' => 'localhost', 'path' => wp_parse_url( home_url( '/' ), PHP_URL_PATH ) ),
 );
+// "Another plugin" with notices hooked three ways, and one printed outside the notice hooks.
+wp_mkdir_p( WPMU_PLUGIN_DIR );
+file_put_contents(
+	sobp_t_foreign_notices_file(),
+	'<?php
+// Test fixture written by the Search Orders functional suite; deleted at the end of the run.
+function zz_sobp_foreign_notice() { echo \'<div class="notice notice-warning zz-sobp-foreign"><p>ZZ SOBP function notice</p></div>\'; }
+class ZZ_Sobp_Foreign { public static function notice() { echo \'<div class="notice notice-info zz-sobp-foreign"><p>ZZ SOBP method notice</p></div>\'; } }
+add_action( \'admin_notices\', \'zz_sobp_foreign_notice\' );
+add_action( \'admin_notices\', array( \'ZZ_Sobp_Foreign\', \'notice\' ) );
+add_action( \'all_admin_notices\', function () { echo \'<div class="notice notice-error zz-sobp-foreign"><p>ZZ SOBP closure notice</p></div>\'; } );
+add_action( \'in_admin_header\', function () { echo \'<div class="notice notice-warning zz-sobp-stray"><p>ZZ SOBP stray notice</p></div>\'; }, 1 );
+'
+);
 $ids['admin_url'] = admin_url();
 $ids['wcs']       = class_exists( 'WC_Subscriptions' );
 sobp_t_save_ids( $ids );

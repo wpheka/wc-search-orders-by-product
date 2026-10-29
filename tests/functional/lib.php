@@ -17,3 +17,6 @@ function sobp_t_result( $name, $ok, $detail = '' ) {
 	file_put_contents( sobp_t_state( 'results' ), $line . "\n", FILE_APPEND );
 	echo $line, "\n";
 }
+function sobp_t_foreign_notices_file() {
+	return WPMU_PLUGIN_DIR . '/zz-sobp-foreign-notices.php';
+}

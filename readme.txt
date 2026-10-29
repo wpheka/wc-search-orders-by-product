@@ -2,8 +2,9 @@
 Contributors: akshayaswaroop, wpheka
 Tags: search orders, woocommerce, order, product, filter
 Requires at least: 6.5
+Requires PHP: 8.1
 Tested up to: 7.1.3
-Stable tag: 4.1.1
+Stable tag: 4.1.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
@@ -35,7 +36,8 @@ Filters work together, so you can ask for "orders with this product, paid by cas
 
 = Minimum Requirements =
 
-* WooCommerce 3.0 or later
+* WordPress 6.5 or later
+* WooCommerce 7.9 or later
 * PHP 8.1 or later
 
 1. Install the plugin through the WordPress plugins screen or upload the plugin folder to the `/wp-content/plugins/` directory.
@@ -68,6 +70,11 @@ Only if you choose to. When you deactivate the plugin you can send an optional f
 4. The settings page under WPHEKA > Search Orders: the filters to show, and the categories the category filter lists.
 
 == Changelog ==
+
+= 4.1.2 - 2026-10-29 =
+* Requires WooCommerce 7.9 or later: the order filters on the HPOS screen need it.
+* Fix - On sites in a right-to-left language the options under a switch on the settings page were indented on the wrong side. They now line up with the switch.
+* Notices from WordPress and other plugins no longer show on the settings page, where they printed above the header and then jumped into place. They still show on every other screen.
 
 = 4.1.1 - 2026-10-14 =
 * Fix - On sites in a right-to-left language (such as Arabic or Hebrew) the settings page sat 20px off the edge of the window and scrolled sideways. The page now mirrors fully.

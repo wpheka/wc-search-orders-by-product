@@ -99,6 +99,10 @@ class WC_Search_Orders_By_Product_Settings_Page {
 		$hook = Menu::add_page( __( 'Search Orders By Product', 'wc-search-orders-by-product' ), __( 'Search Orders', 'wc-search-orders-by-product' ), self::capability(), self::PAGE, array( __CLASS__, 'render' ), Icons::menu_icon() );
 
 		self::$hook = is_string( $hook ) ? $hook : '';
+		if ( '' !== self::$hook ) {
+			// Notices from WordPress and other plugins would print above the header and then jump into place.
+			add_action( 'load-' . self::$hook, array( Page::class, 'quiet_notices' ) );
+		}
 	}
 
 	/**

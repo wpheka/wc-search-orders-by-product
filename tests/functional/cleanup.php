@@ -2,6 +2,9 @@
 /** Deletes the test catalogue, orders and user; restores settings and counters. */
 require __DIR__ . '/lib.php';
 require_once ABSPATH . 'wp-admin/includes/user.php';
+if ( file_exists( sobp_t_foreign_notices_file() ) ) {
+	unlink( sobp_t_foreign_notices_file() );
+}
 $ids = sobp_t_ids();
 if ( ! $ids ) {
 	echo "nothing to clean up\n";
