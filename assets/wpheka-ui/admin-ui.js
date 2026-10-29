@@ -30,6 +30,7 @@
 	function init( ui ) {
 		form( ui );
 		chipfind( ui );
+		kvfind( ui );
 		subs( ui );
 		units( ui );
 		scrollspy( ui );
@@ -129,6 +130,33 @@
 		} );
 	}
 
+	// Narrow key/value rows as you type; hide sections with no match.
+	function kvfind( ui ) {
+		$$( '[data-w-kvfind]', ui ).forEach( function ( box ) {
+			var area = document.getElementById( box.getAttribute( 'data-w-kvfind' ) );
+			if ( ! area ) {
+				return;
+			}
+			var empty = $( '[data-w-kv-empty]', area );
+			box.addEventListener( 'input', function () {
+				var q = box.value.trim().toLowerCase();
+				var shown = 0;
+				$$( '.w-kv > div', area ).forEach( function ( r ) {
+					r.hidden = !! q && -1 === r.textContent.toLowerCase().indexOf( q );
+					if ( ! r.hidden ) {
+						shown++;
+					}
+				} );
+				$$( '.w-section', area ).forEach( function ( s ) {
+					s.hidden = !! q && ! $( '.w-kv > div:not([hidden])', s );
+				} );
+				if ( empty ) {
+					empty.hidden = ! q || shown > 0;
+				}
+			} );
+		} );
+	}
+
 	// Rows that only apply while a switch is on.
 	function subs( ui ) {
 		$$( '[data-w-controls]', ui ).forEach( function ( sw ) {
@@ -175,31 +203,76 @@
 		} );
 	}
 
-	// Highlight the section in view.
+	// Highlight the section in view; nav links glide to their section.
 	function scrollspy( ui ) {
 		var links = $$( '.w-nav-link[href^="#"]', ui );
-		if ( ! links.length || ! ( 'IntersectionObserver' in window ) ) {
+		var held = false;
+		var timer;
+		if ( ! links.length ) {
+			return;
+		}
+
+		function mark( link ) {
+			links.forEach( function ( l ) {
+				var on = l === link;
+				l.classList.toggle( 'is-active', on );
+				if ( on ) {
+					l.setAttribute( 'aria-current', 'true' );
+					var nav = l.parentNode;
+					if ( nav.scrollWidth > nav.clientWidth ) {
+						nav.scrollTo( { left: l.offsetLeft - 16, behavior: 'smooth' } );
+					}
+				} else {
+					l.removeAttribute( 'aria-current' );
+				}
+			} );
+		}
+
+		// Hold the highlight on the clicked link until the page stops moving.
+		function settle() {
+			clearTimeout( timer );
+			timer = setTimeout( function () {
+				held = false;
+				window.removeEventListener( 'scroll', settle );
+			}, 120 );
+		}
+
+		links.forEach( function ( l ) {
+			l.addEventListener( 'click', function ( ev ) {
+				var s = document.getElementById( l.getAttribute( 'href' ).slice( 1 ) );
+				if ( ! s || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button ) {
+					return;
+				}
+				ev.preventDefault();
+				var still = window.matchMedia && window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
+				held = true;
+				mark( l );
+				window.addEventListener( 'scroll', settle );
+				settle();
+				s.scrollIntoView( { behavior: still ? 'auto' : 'smooth', block: 'start' } );
+				if ( window.history && history.pushState ) {
+					history.pushState( null, '', l.getAttribute( 'href' ) );
+				}
+				// Keyboard and screen reader users land in the section too.
+				if ( ! s.hasAttribute( 'tabindex' ) ) {
+					s.setAttribute( 'tabindex', '-1' );
+				}
+				s.focus( { preventScroll: true } );
+			} );
+		} );
+
+		if ( ! ( 'IntersectionObserver' in window ) ) {
 			return;
 		}
 		var io = new IntersectionObserver(
 			function ( entries ) {
 				entries.forEach( function ( e ) {
-					if ( ! e.isIntersecting ) {
+					if ( held || ! e.isIntersecting ) {
 						return;
 					}
-					links.forEach( function ( l ) {
-						var on = l.getAttribute( 'href' ) === '#' + e.target.id;
-						l.classList.toggle( 'is-active', on );
-						if ( on ) {
-							l.setAttribute( 'aria-current', 'true' );
-							var nav = l.parentNode;
-							if ( nav.scrollWidth > nav.clientWidth ) {
-								nav.scrollTo( { left: l.offsetLeft - 16, behavior: 'smooth' } );
-							}
-						} else {
-							l.removeAttribute( 'aria-current' );
-						}
-					} );
+					mark( links.filter( function ( l ) {
+						return l.getAttribute( 'href' ) === '#' + e.target.id;
+					} )[ 0 ] );
 				} );
 			},
 			{ rootMargin: '-25% 0px -65% 0px' }
@@ -333,18 +406,28 @@
 		} );
 	}
 
-	// The "Settings saved" toast arrives with the page after a save.
+	// The "Settings saved" toast arrives with the page after a save and fades by itself.
+	// An error toast stays until its close button is used.
 	function toast( ui ) {
-		var t = $( '.w-toast.is-shown', ui );
-		if ( ! t ) {
-			return;
+		var err = $( '.w-toast--error.is-shown', ui );
+		if ( err ) {
+			var close = $( '[data-w-toast-close]', err );
+			if ( close ) {
+				close.addEventListener( 'click', function () {
+					err.classList.remove( 'is-shown' );
+				} );
+			}
 		}
-		window.setTimeout( function () {
-			t.classList.remove( 'is-shown' );
-		}, 2800 );
-		if ( window.history && window.history.replaceState ) {
+		var t = $( '.w-toast.is-shown:not(.w-toast--error)', ui );
+		if ( t ) {
+			window.setTimeout( function () {
+				t.classList.remove( 'is-shown' );
+			}, 2800 );
+		}
+		if ( ( t || err ) && window.history && window.history.replaceState ) {
 			var url = new URL( window.location.href );
 			url.searchParams.delete( 'w-saved' );
+			url.searchParams.delete( 'w-error' );
 			window.history.replaceState( null, '', url.toString() );
 		}
 	}

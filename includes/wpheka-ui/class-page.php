@@ -53,6 +53,92 @@ class Page {
 	}
 
 	/**
+	 * Keep WordPress's notices off a kit screen: the page shows its own with notices(),
+	 * printed in place, so nothing appears at the top and then moves once the page loads.
+	 * Call on the screen's load-{hook} action. Every other admin screen is untouched.
+	 *
+	 * Nothing hooked to the admin notice actions prints here, the plugin's own included.
+	 * A notice another plugin prints some other way is hidden by the kit's stylesheet,
+	 * which loads in the page head, so it never shows even for a moment.
+	 */
+	public static function quiet_notices() {
+		// in_admin_header runs after every plugin has hooked its notices and before any prints.
+		add_action(
+			'in_admin_header',
+			static function () {
+				foreach ( array( 'admin_notices', 'all_admin_notices', 'network_admin_notices', 'user_admin_notices' ) as $hook ) {
+					remove_all_actions( $hook );
+				}
+			},
+			PHP_INT_MAX
+		);
+		add_filter(
+			'admin_body_class',
+			static function ( $classes ) {
+				return $classes . ' w-quiet-notices';
+			}
+		);
+	}
+
+	/**
+	 * The page's own notices, printed where they stay. Call after open().
+	 *
+	 * @param array[] $notices Each { id, kind (info, warn, error or success), text (limited HTML: a, strong, code, br), link [ label, url ] (opens in a new tab), dismiss (URL that records the dismissal; the notice is removed at once and the URL fetched in the background) }.
+	 */
+	public static function notices( array $notices ) {
+		if ( ! $notices ) {
+			return;
+		}
+		$allowed = array(
+			'a'      => array(
+				'href'   => array(),
+				'target' => array(),
+				'rel'    => array(),
+			),
+			'strong' => array(),
+			'code'   => array(),
+			'br'     => array(),
+		);
+		$icons   = array(
+			'info'    => 'info',
+			'warn'    => 'warn',
+			'error'   => 'warn',
+			'success' => 'check',
+		);
+
+		echo '<div class="w-notices">';
+		foreach ( $notices as $n ) {
+			$n    = wp_parse_args(
+				$n,
+				array(
+					'id'      => '',
+					'kind'    => 'info',
+					'text'    => '',
+					'link'    => array(),
+					'dismiss' => '',
+				)
+			);
+			$kind = isset( $icons[ $n['kind'] ] ) ? $n['kind'] : 'info';
+			$id   = '' !== $n['id'] ? $n['id'] : 'w-notice-' . md5( $n['text'] );
+
+			echo '<div class="w-notice w-notice--' . esc_attr( $kind ) . '" id="' . esc_attr( $id ) . '" role="' . ( 'error' === $kind ? 'alert' : 'status' ) . '">';
+			echo Icons::get( $icons[ $kind ], '2' ) . '<p>' . wp_kses( $n['text'], $allowed ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
+			if ( $n['link'] || $n['dismiss'] ) {
+				echo '<span class="w-notice-actions">';
+				if ( $n['link'] ) {
+					echo '<a class="w-btn w-btn--secondary w-btn--sm" href="' . esc_url( $n['link'][1] ) . '" target="_blank" rel="noopener">' . esc_html( $n['link'][0] ) . '<span class="w-sr"> ' . esc_html__( '(opens in a new tab)', 'wc-search-orders-by-product' ) . '</span></a>';
+				}
+				if ( $n['dismiss'] ) {
+					echo '<a class="w-close" data-w-dismiss="#' . esc_attr( $id ) . '" href="' . esc_url( $n['dismiss'] ) . '" aria-label="' . esc_attr__( 'Dismiss this notice', 'wc-search-orders-by-product' ) . '">' . Icons::get( 'xcircle' ) . '</a>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
+				}
+				echo '</span>';
+			}
+			echo '</div>';
+		}
+		echo '</div>';
+	}
+
+	/**
 	 * Open the page: header with title, links, call to action and tabs.
 	 *
 	 * @param array $args Header settings: icon (URL), name, version, badges (each [ text, kind ] with kind '', 'mint' or 'violet'), subtitle, crumb, links (each [ label, url, icon ]), cta ([ label, url, icon, style ] with style 'pro' or 'ghost') and tabs (each [ label, url, current, count, alert ]).
@@ -197,7 +283,7 @@ class Page {
 	/**
 	 * Close the page: the plugin row, footer, save bar and toast.
 	 *
-	 * @param array $args Footer settings: slug (this plugin's wordpress.org slug, left out of the row), icons_url (with a trailing slash), short_name, review_url, form (the settings form id, when the page has one) and saved (show the "Settings saved" toast).
+	 * @param array $args Footer settings: slug (this plugin's wordpress.org slug, left out of the row), icons_url (with a trailing slash), short_name, review_url, form (the settings form id, when the page has one), saved (show the "Settings saved" toast) and error (a message saying why a save failed: shown in a red toast that stays until dismissed, and announced to screen readers; it replaces the saved toast).
 	 */
 	public static function close( array $args ) {
 		$args = wp_parse_args(
@@ -209,6 +295,7 @@ class Page {
 				'review_url' => '',
 				'form'       => '',
 				'saved'      => false,
+				'error'      => '',
 			)
 		);
 
@@ -249,6 +336,13 @@ class Page {
 			echo '<div class="w-savebar" role="region" aria-label="' . esc_attr__( 'Unsaved changes', 'wc-search-orders-by-product' ) . '"><span class="w-savebar-text">' . esc_html__( 'Unsaved changes', 'wc-search-orders-by-product' ) . '</span>';
 			echo '<button type="reset" form="' . esc_attr( $args['form'] ) . '" class="w-btn w-btn--ghost-inv w-btn--sm" data-w-discard>' . esc_html__( 'Discard', 'wc-search-orders-by-product' ) . '</button>';
 			echo '<button type="submit" form="' . esc_attr( $args['form'] ) . '" class="w-btn w-btn--primary w-btn--sm">' . esc_html__( 'Save changes', 'wc-search-orders-by-product' ) . '</button></div>';
+		}
+		if ( '' !== (string) $args['error'] ) {
+			// A failed save must never be followed by "Settings saved".
+			$args['saved'] = false;
+			echo '<div class="w-toast w-toast--error is-shown" role="alert">';
+			echo '<span class="w-toast-err">' . Icons::get( 'warn', '2' ) . '</span><span class="w-toast-msg">' . esc_html( $args['error'] ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- icon is static SVG.
+			echo '<button type="button" class="w-toast-close" data-w-toast-close aria-label="' . esc_attr__( 'Dismiss', 'wc-search-orders-by-product' ) . '">' . Icons::get( 'xcircle', '2' ) . '</button></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- icon is static SVG.
 		}
 		echo '<div class="w-toast' . ( $args['saved'] ? ' is-shown' : '' ) . '" role="status" aria-live="polite">';
 		if ( $args['saved'] ) {

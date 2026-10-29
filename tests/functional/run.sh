@@ -7,7 +7,9 @@
 # Drives the orders screen in headless Chromium on HPOS and on legacy order
 # storage: filtering by product, product type and category, alone, combined and
 # with status tabs; the Trash view; the Subscriptions screen; the Settings page;
-# the review prompt; and that order queries elsewhere are not narrowed. Fails on
+# the review prompt; that other plugins' notices stay off the Settings page;
+# that order queries elsewhere are not narrowed; and that the
+# plugin header and readme declare the same requirements. Fails on
 # any case that misbehaves or on new PHP errors from this plugin in debug.log.
 # Test data is prefixed "ZZ SOBP" and removed at the end, even after a failure.
 #
@@ -28,9 +30,15 @@ done
 
 wpe() { wp --path="$WP_PATH" eval-file "$@" 2>&1 | grep -v -e 'Deprecated' -e '^$' -e 'Undefined array key 1'; }
 HPOS_BEFORE=$(wp --path="$WP_PATH" option get woocommerce_custom_orders_table_enabled 2>/dev/null | tail -1)
+# Setup creates its orders on HPOS; with compatibility mode (sync) off, as on a fresh
+# store, the legacy tables never get them and every legacy case lists nothing.
+SYNC_BEFORE=$(wp --path="$WP_PATH" option get woocommerce_custom_orders_table_data_sync_enabled 2>/dev/null | tail -1)
 cleanup() {
   wp --path="$WP_PATH" option update woocommerce_custom_orders_table_enabled "$HPOS_BEFORE" >/dev/null 2>&1
+  # Delete the test orders while sync is still on, so neither order table keeps a copy.
   wpe "$HERE/cleanup.php" | sed 's/^/  /'
+  if [ -n "$SYNC_BEFORE" ]; then wp --path="$WP_PATH" option update woocommerce_custom_orders_table_data_sync_enabled "$SYNC_BEFORE" >/dev/null 2>&1
+  else wp --path="$WP_PATH" option delete woocommerce_custom_orders_table_data_sync_enabled >/dev/null 2>&1; fi
   rm -rf "$STATE"
 }
 # Clean up on every way out: normal exit, Ctrl-C, kill, a closed terminal.
@@ -42,7 +50,9 @@ trap 'on_exit; exit 130' INT TERM HUP
 LOG="$WP_PATH/wp-content/debug.log"
 OFFSET=$(wc -c < "$LOG" 2>/dev/null || echo 0)
 
+wp --path="$WP_PATH" option update woocommerce_custom_orders_table_data_sync_enabled yes >/dev/null 2>&1
 echo "== setup";       wpe "$HERE/setup.php" | sed 's/^/  /'
+echo "== requirements"; wpe "$HERE/requirements.php" | sed 's/^/  /'
 echo "== HPOS";        node "$HERE/admin.js" hpos || echo "FAIL|hpos: browser script exited with an error (cases after the failure did not run)" >> "$STATE/results"
                        wpe "$HERE/checks.php" | sed 's/^/  /'
 if [ "$HPOS_BEFORE" = "yes" ]; then

@@ -147,6 +147,17 @@ process.on('uncaughtException', crashed);
       record(resp.status() === 200 && link === 1 && fields === 0 && saveBtn === 0 && /settings have moved/.test(text), 'hpos: the old WooCommerce settings section links to the new page, with no Save button', `status ${resp.status()}, link ${link}, fields ${fields}, save button ${saveBtn}`);
     } catch (e) { record(false, 'hpos: old WooCommerce settings section', e.message.split('\n')[0]); }
 
+    // Other plugins' notices (a test mu-plugin) stay off the kit page, and only there:
+    // nothing prints above the header and then jumps into place.
+    try {
+      await page.goto(`${A}index.php`, { waitUntil: 'domcontentloaded' });
+      const elsewhere = await page.locator('.zz-sobp-foreign').count();
+      await openSettings(page);
+      const here = await page.locator('.zz-sobp-foreign').count();
+      const stray = await page.locator('.zz-sobp-stray').isVisible();
+      record(elsewhere === 3 && here === 0 && !stray, 'hpos: other plugins\' notices stay off the Settings page, and show on the Dashboard', `dashboard ${elsewhere} (want 3), settings ${here}, stray visible ${stray}`);
+    } catch (e) { record(false, 'hpos: notices on the Settings page', e.message.split('\n')[0]); }
+
     // The page shows every field: Product (always on), the six filter switches, the
     // category picker, the items column and the fast lookup row.
     try {

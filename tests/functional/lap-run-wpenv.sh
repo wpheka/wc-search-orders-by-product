@@ -39,9 +39,14 @@ node_admin() { node -r "$(cygpath -m "$HERE/lap-wpenv-shim.cjs")" "$(cygpath -m 
 PRO_WAS=$(wpx plugin get wc-search-orders-by-product-pro --field=status 2>/dev/null | tail -1)
 [ "$PRO_WAS" = "active" ] && wpx plugin deactivate wc-search-orders-by-product-pro >/dev/null 2>&1
 HPOS_BEFORE=$(wpx option get woocommerce_custom_orders_table_enabled 2>/dev/null | tail -1)
+# As run.sh: sync on for the run, so the legacy tables get the orders setup creates.
+SYNC_BEFORE=$(wpx option get woocommerce_custom_orders_table_data_sync_enabled 2>/dev/null | tail -1)
 cleanup() {
   wpx option update woocommerce_custom_orders_table_enabled "$HPOS_BEFORE" >/dev/null 2>&1
+  # Delete the test orders while sync is still on, so neither order table keeps a copy.
   wpe "$HERE/cleanup.php" | sed 's/^/  /'
+  if [ -n "$SYNC_BEFORE" ]; then wpx option update woocommerce_custom_orders_table_data_sync_enabled "$SYNC_BEFORE" >/dev/null 2>&1
+  else wpx option delete woocommerce_custom_orders_table_data_sync_enabled >/dev/null 2>&1; fi
   [ "$PRO_WAS" = "active" ] && wpx plugin activate wc-search-orders-by-product-pro >/dev/null 2>&1
   echo "  Search Orders Pro: $(wpx plugin get wc-search-orders-by-product-pro --field=status 2>/dev/null | tail -1) (was $PRO_WAS)"
   rm -rf "$STATE"
@@ -53,7 +58,9 @@ trap 'on_exit; exit 130' INT TERM HUP
 
 OFFSET=$(docker exec "$CLI" sh -c 'wc -c < /var/www/html/wp-content/debug.log 2>/dev/null || echo 0' | tr -d '\r')
 
+wpx option update woocommerce_custom_orders_table_data_sync_enabled yes >/dev/null 2>&1
 echo "== setup";       wpe "$HERE/setup.php" | sed 's/^/  /'
+echo "== requirements"; wpe "$HERE/requirements.php" | sed 's/^/  /'
 echo "== HPOS";        node_admin hpos || echo "FAIL|hpos: browser script exited with an error (cases after the failure did not run)" >> "$STATE/results"
                        wpe "$HERE/checks.php" | sed 's/^/  /'
 if [ "$HPOS_BEFORE" = "yes" ]; then
