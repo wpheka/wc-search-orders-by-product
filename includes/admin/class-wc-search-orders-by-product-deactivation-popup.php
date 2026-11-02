@@ -299,7 +299,7 @@ class WC_Search_Orders_By_Product_Deactivation_Popup {
 
 						if ( inputType !== '' ) {
 							parent.append( $(reasonInputHtml) );
-							parent.find('input, textarea').attr('placeholder', inputPlaceholder).focus();
+							parent.find('input, textarea').attr('placeholder', inputPlaceholder).trigger('focus');
 						}
 					});
 

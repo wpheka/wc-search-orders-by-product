@@ -30,7 +30,7 @@ Filters work together, so you can ask for "orders with this product, paid by cas
 * A "Purchased" column in the orders list showing the items of each order.
 * Fast on large stores. Filters are added to WooCommerce's own order query. When WooCommerce Analytics data is available its indexed tables are used. Tested with 100,000 orders.
 * Works with High-Performance Order Storage (HPOS) and with the older posts storage.
-* Developer hooks to add your own filters. See [docs/hooks.md](https://github.com/wpheka/wc-search-orders-by-product/blob/master/docs/hooks.md) on GitHub.
+* Developer hooks to add your own filters. See [Developer hooks](https://docs.wpheka.com/plugin/wc-search-orders-by-product/developers) in the documentation.
 
 == Installation ==
 
@@ -70,6 +70,10 @@ Only if you choose to. When you deactivate the plugin you can send an optional f
 4. The settings page under WPHEKA > Search Orders: the filters to show, and the categories the category filter lists.
 
 == Changelog ==
+
+= Unreleased =
+* Enhancement - The Docs and Developer hooks links now open the documentation at docs.wpheka.com.
+* Tweak - The deactivation feedback dialog uses `.trigger( 'focus' )` instead of jQuery's deprecated `.focus()` shorthand.
 
 = 4.1.2 - 2026-10-29 =
 * Requires WooCommerce 7.9 or later: the order filters on the HPOS screen need it.

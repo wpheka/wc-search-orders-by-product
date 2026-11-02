@@ -274,11 +274,11 @@ class WC_Search_Orders_By_Product_Settings_Page {
 	 */
 	private static function links() {
 		return array(
-			'docs'    => 'https://wordpress.org/plugins/' . self::SLUG . '/#faq',
+			'docs'    => 'https://docs.wpheka.com/plugin/' . self::SLUG,
 			'support' => 'https://wordpress.org/support/plugin/' . self::SLUG . '/',
 			'changes' => 'https://wordpress.org/plugins/' . self::SLUG . '/#developers',
 			'review'  => 'https://wordpress.org/support/plugin/' . self::SLUG . '/reviews/#new-post',
-			'hooks'   => 'https://github.com/wpheka/wc-search-orders-by-product/blob/master/docs/hooks.md',
+			'hooks'   => 'https://docs.wpheka.com/plugin/' . self::SLUG . '/developers',
 			'contact' => 'https://www.wpheka.com/contact/',
 		);
 	}
