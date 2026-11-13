@@ -1,21 +1,23 @@
-=== WC Search Orders By Product ===
+=== WPHEKA Search & Filter Orders by Product ===
 Contributors: akshayaswaroop, wpheka
-Tags: search orders, woocommerce, order, product, filter
+Tags: search orders, filter orders, sku search, order search, woocommerce
 Requires at least: 6.5
 Requires PHP: 8.1
-Tested up to: 7.1.3
-Stable tag: 4.1.2
+Tested up to: 7.1.4
+Stable tag: 4.1.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Donate link: https://www.paypal.me/AKSHAYASWAROOP
-Filter your WooCommerce orders by product, variation, category, SKU, payment method, shipping method and country.
+Search orders by product on the WooCommerce Orders screen. Filter orders by variation, category, SKU, payment method, shipping or country.
 
 == Description ==
-WC Search Orders By Product adds filters to the WooCommerce Orders screen so you can find the orders that contain a product. Start typing a product name in the product box and pick it from the list. The orders list then shows only the orders with that product, together with the status tabs, search and month filter you already use.
+WooCommerce's own order search is a text search. WPHEKA Search & Filter Orders by Product gives you real filters instead. Pick an exact product or a single variation from a list and the orders list shows only the orders holding it. A variable product also finds orders of its variations.
+
+Filter orders by product type, category, SKU, payment method, shipping method or billing country. The filters work together: orders with this product, paid by cash on delivery, from Canada. The status tabs, search box and month filter you already use stay where they are. A Purchased column shows the items of each order, so you can read the list without opening anything.
 
 ### 🔍 FILTER ORDERS BY
 
-* Product or a single variation (searched by name)
+* Product or a single variation. A variable product also finds orders of its variations.
 * Product type
 * Product category, including its sub-categories
 * SKU or the start of a SKU
@@ -51,7 +53,7 @@ Filters work together, so you can ask for "orders with this product, paid by cas
 SKU, payment method, shipping method and country filters are off until you switch them on under WPHEKA > Search Orders.
 
 = Does the SKU filter find renamed SKUs? =
-It matches each product's current SKU, because WooCommerce does not save the SKU on the order. If you change a product's SKU, search by its new SKU.
+It matches each product's SKU as it is today, because WooCommerce does not save the SKU on the order. If you rename a SKU, search by the new one: the old orders still come back, because the match is made through the product. Orders of a product you have since deleted cannot be found by SKU.
 
 = Is it fast on a store with many orders? =
 Yes. Filters run inside WooCommerce's own order query instead of loading every order first. If WooCommerce Analytics has imported your order history, the plugin uses its indexed tables and its settings page shows Fast lookup as On.
@@ -62,16 +64,27 @@ Yes. Anyone who can manage orders can use the filters. Shop managers can also ch
 = Does the plugin send any data? =
 Only if you choose to. When you deactivate the plugin you can send an optional feedback form, which sends your reason, site address and email address (if you enter one) to wpheka.com. Nothing is sent unless you submit that form.
 
+= Can I filter by more than one product at once? =
+Not on the orders screen: there each filter takes one value. One product or variation, one product type, one category, one SKU or SKU start, one payment method, one shipping method, one billing country. What the filters do is work together, so "this product, paid by cash on delivery, from Canada" is one search.
+
+= Does it work with High-Performance Order Storage? =
+Yes. It also works with the older posts storage. The filters are added to WooCommerce's own order query either way, so the status tabs and pagination keep working. The Trash view is not filtered.
+
+= What is the Purchased column? =
+A column next to the order number listing the items of each order, so you can see what is in an order without opening it. It is on by default and can be switched off under WPHEKA > Search Orders.
+
 == Screenshots ==
 
-1. The orders screen with the product, type, category, payment, shipping, country and SKU filters and the Purchased column.
-2. Orders filtered by the start of a SKU, here every variation of one product.
-3. Orders filtered by a category (sub-categories included) and a billing country.
-4. The settings page under WPHEKA > Search Orders: the filters to show, and the categories the category filter lists.
+1. All seven filters on one row above the WooCommerce orders list, with the Purchased column showing what is in each order.
+2. Type the first characters of a SKU to find every product or variation whose SKU starts with them.
+3. Filters work together: this is a category, its sub-categories and one billing country in a single search.
+4. Choose which filters appear on the orders screen and which categories the category filter lists.
 
 == Changelog ==
 
-= Unreleased =
+= 4.1.3 - 2026-11-13 =
+* Tweak - The plugin is now called WPHEKA Search & Filter Orders by Product. New listing text.
+* Enhancement - WordPress 7.1.4 compatibility.
 * Enhancement - The Docs and Developer hooks links now open the documentation at docs.wpheka.com.
 * Tweak - The deactivation feedback dialog uses `.trigger( 'focus' )` instead of jQuery's deprecated `.focus()` shorthand.
 

@@ -2,22 +2,21 @@
 # This file is distributed under the GPLv3 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: WC Search Orders By Product 4.1.2\n"
+"Project-Id-Version: WPHEKA Search & Filter Orders by Product 4.1.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wc-search-orders-by-product\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-29T14:38:55+00:00\n"
+"POT-Creation-Date: 2026-11-13T06:14:13+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wc-search-orders-by-product\n"
 
 #. Plugin Name of the plugin
 #: wc-search-orders-by-product.php
-#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:107
-msgid "WC Search Orders By Product"
+msgid "WPHEKA Search & Filter Orders by Product"
 msgstr ""
 
 #. Plugin URI of the plugin
@@ -27,7 +26,7 @@ msgstr ""
 
 #. Description of the plugin
 #: wc-search-orders-by-product.php
-msgid "The <code><strong>WC Search Orders By Product</strong></code> plugin helps you search your WooCommerce orders by product name, type and category."
+msgid "Filters the WooCommerce orders list by product, variation, category, SKU, payment method, shipping method and billing country."
 msgstr ""
 
 #. Author of the plugin
@@ -377,6 +376,10 @@ msgstr ""
 #: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:106
 #, php-format
 msgid "You have been finding orders with %1$s. If it saves you time, please leave us a %2$s rating on WordPress.org. %3$sDon't ask again%4$s."
+msgstr ""
+
+#: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:107
+msgid "WC Search Orders By Product"
 msgstr ""
 
 #: includes/admin/settings/class-wc-search-orders-by-product-admin-settings.php:108

@@ -1,14 +1,13 @@
 <?php
 /**
- * Plugin Name: WC Search Orders By Product
+ * Plugin Name: WPHEKA Search & Filter Orders by Product
  * Plugin URI: https://www.wpheka.com/product/wc-search-orders-by-product
- * Description: The <code><strong>WC Search Orders By Product</strong></code> plugin helps you search your WooCommerce orders by product name, type and category.
+ * Description: Filters the WooCommerce orders list by product, variation, category, SKU, payment method, shipping method and billing country.
  * Author: WPHEKA
  * Author URI: https://www.wpheka.com/
- * Version: 4.1.2
+ * Version: 4.1.3
  * Requires at least: 6.5
  * Requires PHP: 8.1
- * Tested up to: 7.1.3
  * Requires Plugins: woocommerce
  * WC requires at least: 7.9
  * WC tested up to: 11.2.1
